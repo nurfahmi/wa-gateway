@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Documentation - WhatsApp Gateway</title>
+  <link rel="stylesheet" href="/css/output.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --accent: #6366f1;
+      --accent-dark: #4f46e5;
+      --code-bg: #0f172a;
+      --code-border: #1e293b;
+    }
+    
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    }
+    
+    .code-font {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+    }
+    
+    /* Code Block Styling */
+    .code-block {
+      position: relative;
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    .code-block-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid var(--code-border);
+    }
+    
+    .code-block-header .lang {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #64748b;
+    }
+    
+    .code-block pre {
+      margin: 0;
+      padding: 16px 20px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    
+    .code-block code {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      color: #e2e8f0;
+      white-space: pre;
+    }
+    
+    /* Syntax Colors */
+    .syn-str { color: #a5d6ff; }
+    .syn-key { color: #7dd3fc; }
+    .syn-num { color: #fbbf24; }
+    .syn-cmd { color: #f472b6; }
+    .syn-flag { color: #a78bfa; }
+    .syn-url { color: #34d399; }
+    .syn-comment { color: #64748b; }
+    
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #94a3b8;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    
+    .copy-btn:hover {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+    
+    .copy-btn.copied {
+      background: #10b981;
+      border-color: #10b981;
+      color: #fff;
+    }
+    
+    /* Method Badges */
+    .method-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .method-post { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; }
+    .method-get { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+    .method-put { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+    .method-delete { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+    
+    /* Navigation */
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #64748b;
+      transition: all 0.15s ease;
+      border-left: 3px solid transparent;
+    }
+    
+    .nav-item:hover {
+      background: #f8fafc;
+      color: #334155;
+    }
+    
+    .nav-item.active {
+      background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+      color: var(--accent);
+      border-left-color: var(--accent);
+    }
+    
+    /* Cards */
+    .doc-card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+    
+    .doc-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    
+    .doc-card-header {
+      padding: 24px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    
+    .doc-card-body {
+      padding: 24px;
+    }
+    
+    /* Endpoint Display */
+    .endpoint-display {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .endpoint-url {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 500;
+      color: #1e293b;
+    }
+    
+    /* Parameter Table */
+    .param-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+    
+    .param-table th {
+      text-align: left;
+      padding: 12px 16px;
+      background: #f8fafc;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #64748b;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .param-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 14px;
+    }
+    
+    .param-table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    .param-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 500;
+      color: #6366f1;
+      font-size: 13px;
+    }
+    
+    .param-required {
+      display: inline-block;
+      padding: 2px 8px;
+      background: #fef2f2;
+      color: #dc2626;
+      font-size: 10px;
+      font-weight: 600;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    
+    .param-optional {
+      display: inline-block;
+      padding: 2px 8px;
+      background: #f1f5f9;
+      color: #64748b;
+      font-size: 10px;
+      font-weight: 600;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    
+    /* Alert Box */
+    .alert-box {
+      display: flex;
+      gap: 14px;
+      padding: 16px 18px;
+      border-radius: 12px;
+    }
+    
+    .alert-info {
+      background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      border: 1px solid #bfdbfe;
+    }
+    
+    .alert-warning {
+      background: linear-gradient(135deg, #fffbeb, #fef3c7);
+      border: 1px solid #fde68a;
+    }
+    
+    .alert-success {
+      background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+      border: 1px solid #bbf7d0;
+    }
+    
+    /* Smooth Scroll */
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    /* Device Card */
+    .device-card {
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      transition: all 0.15s ease;
+    }
+    
+    .device-card:hover {
+      border-color: #c7d2fe;
+      background: #fafaff;
+    }
+    
+    /* API Key Display */
+    .api-key-display {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: #f8fafc;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .api-key-value {
+      flex: 1;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #1e293b;
+      word-break: break-all;
+    }
+    
+    /* Tab Buttons */
+    .tab-btn {
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    
+    .tab-btn:hover {
+      color: #334155;
+    }
+    
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+  </style>
+</head>
+<body class="bg-slate-50">
+  <%- include('../partials/header', { user }) %>
+  
+  <div class="flex min-h-screen">
+    <%- include('../partials/sidebar') %>
+    
+    <main class="flex-1 p-6 lg:p-8 overflow-auto">
+      <div class="max-w-6xl mx-auto">
+        
+        <!-- Page Header -->
+        <div class="mb-10">
+          <div class="flex items-center gap-5 mb-3">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+              <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              </svg>
+            </div>
+            <div>
+              <h1 class="text-3xl font-bold text-slate-900">API Documentation</h1>
+              <p class="text-slate-500 mt-1">Simple REST API for WhatsApp messaging</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          
+          <!-- Sidebar Navigation -->
+          <div class="lg:col-span-1">
+            <div class="sticky top-8">
+              <div class="doc-card p-4">
+                <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4 px-3">Documentation</h3>
+                <nav class="space-y-1">
+                  <a href="#quick-start" class="nav-item active">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Quick Start
+                  </a>
+                  <a href="#authentication" class="nav-item">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                    </svg>
+                    Authentication
+                  </a>
+                  <a href="#send-text" class="nav-item">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    Send Text
+                  </a>
+                  <a href="#send-image" class="nav-item">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Send Image
+                  </a>
+                  <a href="#send-document" class="nav-item">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Send Document
+                  </a>
+                  <a href="#send-video" class="nav-item">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    Send Video
+                  </a>
+                  <a href="#errors" class="nav-item">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    Error Codes
+                  </a>
+                </nav>
+              </div>
+              
+              <!-- Base URL Info -->
+              <div class="mt-4 p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl border border-indigo-100">
+                <p class="text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-2">Base URL</p>
+                <code class="code-font text-sm text-indigo-800 break-all"><%= baseUrl %>/api</code>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Main Content -->
+          <div class="lg:col-span-3 space-y-8">
+            
+            <!-- Quick Start -->
+            <section id="quick-start" class="doc-card">
+              <div class="doc-card-header">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 class="text-xl font-bold text-slate-900">Quick Start</h2>
+                    <p class="text-slate-500 text-sm">Send your first message in 30 seconds</p>
+                  </div>
+                </div>
+              </div>
+              <div class="doc-card-body space-y-6">
+                <div class="alert-box alert-success">
+                  <svg class="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                  </svg>
+                  <div>
+                    <p class="font-semibold text-emerald-800">Simple Integration</p>
+                    <p class="text-sm text-emerald-700 mt-1">Just one header (<code class="code-font bg-emerald-100 px-1.5 py-0.5 rounded">API_KEY</code>) and you're ready to send messages!</p>
+                  </div>
+                </div>
+                
+                <div class="code-block">
+                  <div class="code-block-header">
+                    <span class="lang">cURL</span>
+                    <button class="copy-btn" data-action="copy-code">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      Copy
+                    </button>
+                  </div>
+                  <pre><code><span class="syn-cmd">curl</span> <span class="syn-flag">-X POST</span> <span class="syn-url">"<%= baseUrl %>/api/send"</span> \
+  <span class="syn-flag">-H</span> <span class="syn-str">"Content-Type: application/json"</span> \
+  <span class="syn-flag">-H</span> <span class="syn-str">"API_KEY: YOUR_API_KEY"</span> \
+  <span class="syn-flag">-d</span> <span class="syn-str">'{
+    "recipient": "628123456789",
+    "message": "Hello from API!"
+  }'</span></code></pre>
+                </div>
+              </div>
+            </section>
+            
+            <!-- Authentication -->
+            <section id="authentication" class="doc-card">
+              <div class="doc-card-header">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 class="text-xl font-bold text-slate-900">Authentication</h2>
+                    <p class="text-slate-500 text-sm">Secure your API requests</p>
+                  </div>
+                </div>
+              </div>
+              <div class="doc-card-body space-y-6">
+                <p class="text-slate-600">All API requests require authentication using your <strong>Device API Key</strong>. Include it in the request header:</p>
+                
+                <div class="endpoint-display">
+                  <span class="text-sm font-semibold text-slate-500">Header:</span>
+                  <code class="code-font text-sm font-semibold text-indigo-600">API_KEY: your-device-api-key</code>
+                </div>
+                
+                <!-- Connected Devices -->
+                <div class="mt-6">
+                  <h3 class="font-semibold text-slate-800 mb-4">Your Connected Devices</h3>
+                  <% if (devices && devices.length > 0) { %>
+                    <div class="space-y-3">
+                      <% devices.forEach(device => { %>
+                        <div class="device-card">
+                          <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-3">
+                              <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                </svg>
+                              </div>
+                              <div>
+                                <p class="font-semibold text-slate-900"><%= device.name %></p>
+                                <p class="text-sm text-slate-500"><%= device.phoneNumber %></p>
+                              </div>
+                            </div>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
+                              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                              Connected
+                            </span>
+                          </div>
+                          <% if (device.apiKey) { %>
+                            <div class="api-key-display">
+                              <code class="api-key-value"><%= device.apiKey %></code>
+                              <button data-action="copy-api-key" data-api-key="<%= device.apiKey %>" class="flex-shrink-0 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition-colors">
+                                Copy Key
+                              </button>
+                            </div>
+                          <% } else { %>
+                            <div class="alert-box alert-warning">
+                              <svg class="w-4 h-4 text-amber-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                              </svg>
+                              <p class="text-sm text-amber-700">No API key generated. <a href="/accounts" class="underline font-semibold">Generate one</a></p>
+                            </div>
+                          <% } %>
+                        </div>
+                      <% }) %>
+                    </div>
+                  <% } else { %>
+                    <div class="text-center py-10 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
+                      <svg class="w-12 h-12 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
+                      <p class="text-slate-500 mb-4">No connected devices yet</p>
+                      <a href="/accounts" class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Connect Device
+                      </a>
+                    </div>
+                  <% } %>
+                </div>
+              </div>
+            </section>
+            
+            <!-- Send Text Message -->
+            <section id="send-text" class="doc-card">
+              <div class="doc-card-header flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <span class="method-badge method-post">POST</span>
+                  <h2 class="text-xl font-bold text-slate-900">Send Text Message</h2>
+                </div>
+              </div>
+              <div class="doc-card-body space-y-6">
+                <div class="endpoint-display">
+                  <span class="method-badge method-post text-xs">POST</span>
+                  <code class="endpoint-url">/api/send</code>
+                </div>
+                
+                <div>
+                  <h4 class="font-semibold text-slate-800 mb-3">Headers</h4>
+                  <table class="param-table">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Value</th>
+                        <th>Required</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><span class="param-name">Content-Type</span></td>
+                        <td class="text-slate-600">application/json</td>
+                        <td><span class="param-required">Required</span></td>
+                      </tr>
+                      <tr>
+                        <td><span class="param-name">API_KEY</span></td>
+                        <td class="text-slate-600">Your device API key</td>
+                        <td><span class="param-required">Required</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                
+                <div>
+                  <h4 class="font-semibold text-slate-800 mb-3">Request Body</h4>
+                  <table class="param-table">
+                    <thead>
+                      <tr>
+                        <th>Parameter</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><span class="param-name">recipient</span></td>
+                        <td class="text-slate-600">string</td>
+                        <td>Phone number with country code (e.g., 628123456789)</td>
+                      </tr>
+                      <tr>
+                        <td><span class="param-name">message</span></td>
+                        <td class="text-slate-600">string</td>
+                        <td>Message text content</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                
+                <div>
+                  <h4 class="font-semibold text-slate-800 mb-3">Example Request</h4>
+                  <div class="code-block">
+                    <div class="code-block-header">
+                      <span class="lang">cURL</span>
+                      <button class="copy-btn" data-action="copy-code">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Copy
+                      </button>
+                    </div>
+                    <pre><code><span class="syn-cmd">curl</span> <span class="syn-flag">-X POST</span> <span class="syn-url">"<%= baseUrl %>/api/send"</span> \
+  <span class="syn-flag">-H</span> <span class="syn-str">"Content-Type: application/json"</span> \
+  <span class="syn-flag">-H</span> <span class="syn-str">"API_KEY: YOUR_API_KEY"</span> \
+  <span class="syn-flag">-d</span> <span class="syn-str">'{
+    "recipient": "628123456789",
+    "message": "Hello from WhatsApp API!"
+  }'</span></code></pre>
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 class="font-semibold text-slate-800 mb-3">Response</h4>
+                  <div class="code-block">
+                    <div class="code-block-header">
+                      <span class="lang">JSON</span>
+                    </div>
+                    <pre><code>{
+  <span class="syn-key">"success"</span>: <span class="syn-num">true</span>,
+  <span class="syn-key">"messageId"</span>: <span class="syn-str">"3EB0123456789ABCDEF"</span>,
+  <span class="syn-key">"status"</span>: <span class="syn-str">"sent"</span>
+}</code></pre>
+                  </div>
+                </div>
+              </div>
+            </section>
+            
+            <!-- Send Image -->
+            <section id="send-image" class="doc-card">
+              <div class="doc-card-header flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <span class="method-badge method-post">POST</span>
+                  <h2 class="text-xl font-bold text-slate-900">Send Image</h2>
+                </div>
+              </div>
+              <div class="doc-card-body space-y-6">
+                <div class="endpoint-display">
+                  <span class="method-badge method-post text-xs">POST</span>
+                  <code class="endpoint-url">/api/send/image</code>
+                </div>
+                
+                <div class="alert-box alert-info">
+                  <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                  </svg>
+                  <div>
+                    <p class="font-semibold text-blue-800">Multipart Form Data</p>
+                    <p class="text-sm text-blue-700 mt-1">Use <code class="code-font bg-blue-100 px-1.5 py-0.5 rounded">-F</code> flags for file uploads instead of <code class="code-font bg-blue-100 px-1.5 py-0.5 rounded">-d</code></p>
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 class="font-semibold text-slate-800 mb-3">Form Parameters</h4>
+                  <table class="param-table">
+                    <thead>
+                      <tr>
+                        <th>Parameter</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><span class="param-name">recipient</span></td>
+                        <td class="text-slate-600">string</td>
+                        <td>Phone number with country code</td>
+                      </tr>
+                      <tr>
+                        <td><span class="param-name">file</span></td>
+                        <td class="text-slate-600">file</td>
+                        <td>Image file (JPG, PNG, GIF, WebP)</td>
+                      </tr>
+                      <tr>
+                        <td><span class="param-name">message</span></td>
+                        <td class="text-slate-600">string</td>
+                        <td>Optional caption for the image</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                
+                <div>
+                  <h4 class="font-semibold text-slate-800 mb-3">Example Request</h4>
+                  <div class="code-block">
+                    <div class="code-block-header">
+                      <span class="lang">cURL</span>
+                      <button class="copy-btn" data-action="copy-code">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Copy
+                      </button>
+                    </div>
+                    <pre><code><span class="syn-cmd">curl</span> <span class="syn-flag">-X POST</span> <span class="syn-url">"<%= baseUrl %>/api/send/image"</span> \
+  <span class="syn-flag">-H</span> <span class="syn-str">"API_KEY: YOUR_API_KEY"</span> \
+  <span class="syn-flag">-F</span> <span class="syn-str">"recipient=628123456789"</span> \
+  <span class="syn-flag">-F</span> <span class="syn-str">"file=@/path/to/image.jpg"</span> \
+  <span class="syn-flag">-F</span> <span class="syn-str">"message=Check out this image!"</span></code></pre>
+                  </div>
+                </div>
+              </div>
+            </section>
+            
+            <!-- Send Document -->
+            <section id="send-document" class="doc-card">
+              <div class="doc-card-header flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <span class="method-badge method-post">POST</span>
+                  <h2 class="text-xl font-bold text-slate-900">Send Document</h2>
+                </div>
+              </div>
+              <div class="doc-card-body space-y-6">
+                <div class="endpoint-display">
+                  <span class="method-badge method-post text-xs">POST</span>
+                  <code class="endpoint-url">/api/send/document</code>
+                </div>
+                
+                <div>
+                  <h4 class="font-semibold text-slate-800 mb-3">Form Parameters</h4>
+                  <table class="param-table">
+                    <thead>
+                      <tr>
+                        <th>Parameter</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><span class="param-name">recipient</span></td>
+                        <td class="text-slate-600">string</td>
+                        <td>Phone number with country code</td>
+                      </tr>
+                      <tr>
+                        <td><span class="param-name">file</span></td>
+                        <td class="text-slate-600">file</td>
+                        <td>Document file (PDF, DOC, XLS, etc.)</td>
+                      </tr>
+                      <tr>
+                        <td><span class="param-name">fileName</span></td>
+                        <td class="text-slate-600">string</td>
+                        <td>Optional display filename</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                
+                <div>
+                  <h4 class="font-semibold text-slate-800 mb-3">Example Request</h4>
+                  <div class="code-block">
+                    <div class="code-block-header">
+                      <span class="lang">cURL</span>
+                      <button class="copy-btn" data-action="copy-code">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Copy
+                      </button>
+                    </div>
+                    <pre><code><span class="syn-cmd">curl</span> <span class="syn-flag">-X POST</span> <span class="syn-url">"<%= baseUrl %>/api/send/document"</span> \
+  <span class="syn-flag">-H</span> <span class="syn-str">"API_KEY: YOUR_API_KEY"</span> \
+  <span class="syn-flag">-F</span> <span class="syn-str">"recipient=628123456789"</span> \
+  <span class="syn-flag">-F</span> <span class="syn-str">"file=@/path/to/invoice.pdf"</span> \
+  <span class="syn-flag">-F</span> <span class="syn-str">"fileName=Invoice-2025.pdf"</span></code></pre>
+                  </div>
+                </div>
+              </div>
+            </section>
+            
+            <!-- Send Video -->
+            <section id="send-video" class="doc-card">
+              <div class="doc-card-header flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <span class="method-badge method-post">POST</span>
+                  <h2 class="text-xl font-bold text-slate-900">Send Video</h2>
+                </div>
+              </div>
+              <div class="doc-card-body space-y-6">
+                <div class="endpoint-display">
+                  <span class="method-badge method-post text-xs">POST</span>
+                  <code class="endpoint-url">/api/send/video</code>
+                </div>
+                
+                <div>
+                  <h4 class="font-semibold text-slate-800 mb-3">Example Request</h4>
+                  <div class="code-block">
+                    <div class="code-block-header">
+                      <span class="lang">cURL</span>
+                      <button class="copy-btn" data-action="copy-code">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Copy
+                      </button>
+                    </div>
+                    <pre><code><span class="syn-cmd">curl</span> <span class="syn-flag">-X POST</span> <span class="syn-url">"<%= baseUrl %>/api/send/video"</span> \
+  <span class="syn-flag">-H</span> <span class="syn-str">"API_KEY: YOUR_API_KEY"</span> \
+  <span class="syn-flag">-F</span> <span class="syn-str">"recipient=628123456789"</span> \
+  <span class="syn-flag">-F</span> <span class="syn-str">"file=@/path/to/video.mp4"</span> \
+  <span class="syn-flag">-F</span> <span class="syn-str">"message=Check out this video!"</span></code></pre>
+                  </div>
+                </div>
+              </div>
+            </section>
+            
+            <!-- Error Codes -->
+            <section id="errors" class="doc-card">
+              <div class="doc-card-header">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-rose-500 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 class="text-xl font-bold text-slate-900">Error Codes</h2>
+                    <p class="text-slate-500 text-sm">HTTP status codes and error handling</p>
+                  </div>
+                </div>
+              </div>
+              <div class="doc-card-body space-y-6">
+                <div>
+                  <h4 class="font-semibold text-slate-800 mb-3">Error Response Format</h4>
+                  <div class="code-block">
+                    <div class="code-block-header">
+                      <span class="lang">JSON</span>
+                    </div>
+                    <pre><code>{
+  <span class="syn-key">"success"</span>: <span class="syn-num">false</span>,
+  <span class="syn-key">"error"</span>: <span class="syn-str">"Error message description"</span>
+}</code></pre>
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 class="font-semibold text-slate-800 mb-3">Status Codes</h4>
+                  <table class="param-table">
+                    <thead>
+                      <tr>
+                        <th>Code</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><code class="code-font px-2 py-1 bg-emerald-100 text-emerald-700 rounded font-semibold">200</code></td>
+                        <td class="text-slate-600">Success - Request completed successfully</td>
+                      </tr>
+                      <tr>
+                        <td><code class="code-font px-2 py-1 bg-amber-100 text-amber-700 rounded font-semibold">400</code></td>
+                        <td class="text-slate-600">Bad Request - Invalid parameters or missing required fields</td>
+                      </tr>
+                      <tr>
+                        <td><code class="code-font px-2 py-1 bg-red-100 text-red-700 rounded font-semibold">401</code></td>
+                        <td class="text-slate-600">Unauthorized - Invalid or missing API key</td>
+                      </tr>
+                      <tr>
+                        <td><code class="code-font px-2 py-1 bg-red-100 text-red-700 rounded font-semibold">404</code></td>
+                        <td class="text-slate-600">Not Found - Resource doesn't exist</td>
+                      </tr>
+                      <tr>
+                        <td><code class="code-font px-2 py-1 bg-orange-100 text-orange-700 rounded font-semibold">429</code></td>
+                        <td class="text-slate-600">Too Many Requests - Rate limit exceeded</td>
+                      </tr>
+                      <tr>
+                        <td><code class="code-font px-2 py-1 bg-red-100 text-red-700 rounded font-semibold">500</code></td>
+                        <td class="text-slate-600">Internal Server Error - Something went wrong on our end</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+            
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <%- include('../partials/footer') %>
+  
+  <script>
+    // Copy code functionality using event delegation
+    document.addEventListener('click', function(e) {
+      const copyCodeBtn = e.target.closest('[data-action="copy-code"]');
+      if (copyCodeBtn) {
+        const codeBlock = copyCodeBtn.closest('.code-block');
+        const code = codeBlock.querySelector('code');
+        const text = code.textContent;
+        copyToClipboard(copyCodeBtn, text);
+      }
+      
+      const copyApiKeyBtn = e.target.closest('[data-action="copy-api-key"]');
+      if (copyApiKeyBtn) {
+        const apiKey = copyApiKeyBtn.getAttribute('data-api-key');
+        copyApiKeyToClipboard(apiKey, copyApiKeyBtn);
+      }
+    });
+
+    function copyToClipboard(button, text) {
+      navigator.clipboard.writeText(text).then(() => {
+        const originalHTML = button.innerHTML;
+        button.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg> Copied!';
+        button.classList.add('copied');
+        
+        setTimeout(() => {
+          button.innerHTML = originalHTML;
+          button.classList.remove('copied');
+        }, 2000);
+      });
+    }
+    
+    // Copy API key functionality
+    function copyApiKeyToClipboard(key, button) {
+      navigator.clipboard.writeText(key).then(() => {
+        const originalText = button.textContent;
+        button.textContent = 'Copied!';
+        button.classList.add('bg-emerald-600');
+        button.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+        
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.classList.remove('bg-emerald-600');
+          button.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+        }, 2000);
+      });
+    }
+    
+    // Active section highlighting on scroll
+    const sections = document.querySelectorAll('section[id]');
+    const navItems = document.querySelectorAll('.nav-item');
+    
+    const observerOptions = {
+      root: null,
+      rootMargin: '-20% 0px -60% 0px',
+      threshold: 0
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          navItems.forEach(item => {
+            item.classList.remove('active');
+            if (item.getAttribute('href') === '#' + entry.target.id) {
+              item.classList.add('active');
+            }
+          });
+        }
+      });
+    }, observerOptions);
+    
+    sections.forEach(section => observer.observe(section));
+    
+    // Smooth scroll for navigation
+    navItems.forEach(item => {
+      item.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  </script>
+</body>
+</html>

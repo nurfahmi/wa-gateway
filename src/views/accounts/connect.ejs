@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - WhatsApp Gateway</title>
+  <link rel="stylesheet" href="/css/output.css">
+  <script src="/js/vendor/axios.min.js"></script>
+</head>
+<body class="bg-gray-50">
+  <%- include('../partials/header', { user }) %>
+  <div class="flex">
+    <%- include('../partials/sidebar') %>
+    <main class="flex-1 p-8 max-w-4xl mx-auto">
+      <!-- Header -->
+      <div class="mb-8">
+        <div class="flex items-center space-x-3 mb-2">
+          <a href="/accounts" class="text-gray-500 hover:text-gray-700 transition-colors duration-150">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+          </a>
+          <div>
+            <h2 class="text-3xl font-bold text-gray-900">Connect WhatsApp Account</h2>
+            <p class="text-gray-600 mt-1">Link your WhatsApp to start sending and receiving messages</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Important Notice -->
+      <div class="bg-gradient-to-r from-primary-50 to-blue-50 border border-primary-200 rounded-lg p-6 mb-6">
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0">
+            <svg class="w-10 h-10 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-xl font-bold text-primary-900 mb-3">How it Works</h3>
+            <p class="text-primary-800 mb-4">Connect your WhatsApp account securely by scanning a QR code with your mobile device.</p>
+            <div class="grid md:grid-cols-2 gap-3 mb-4">
+              <div class="flex items-start space-x-2">
+                <svg class="w-5 h-5 text-primary-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span class="text-sm text-primary-800">Secure QR code authentication</span>
+              </div>
+              <div class="flex items-start space-x-2">
+                <svg class="w-5 h-5 text-primary-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span class="text-sm text-primary-800">Send and receive messages</span>
+              </div>
+              <div class="flex items-start space-x-2">
+                <svg class="w-5 h-5 text-primary-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span class="text-sm text-primary-800">Manage from dashboard</span>
+              </div>
+              <div class="flex items-start space-x-2">
+                <svg class="w-5 h-5 text-primary-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span class="text-sm text-primary-800">Disconnect anytime</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Connection Form -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center space-x-3 mb-6">
+          <div class="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900">Account Details</h3>
+            <p class="text-sm text-gray-600">Enter your account information</p>
+          </div>
+        </div>
+        <form id="connectForm">
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number <span class="text-red-500">*</span></label>
+            <input type="text" id="phoneNumber" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="e.g., +6281234567890" required>
+            <p class="mt-1 text-xs text-gray-500">Enter the WhatsApp phone number (with country code) to identify this account</p>
+          </div>
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Display Name <span class="text-gray-400">(Optional)</span></label>
+            <input type="text" id="displayName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="e.g., Customer Support, Sales Team">
+            <p class="mt-1 text-xs text-gray-500">Choose a name to identify this account in your dashboard</p>
+          </div>
+          <button type="submit" id="connectBtn" class="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-lg shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-150">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            Connect WhatsApp Account
+          </button>
+        </form>
+      </div>
+
+      <!-- QR Code Modal -->
+      <div id="qrModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <!-- Modal Header -->
+          <div class="flex items-center justify-between p-6 border-b border-gray-200">
+            <div class="flex items-center space-x-3">
+              <div class="flex-shrink-0">
+                <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                  <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                  </svg>
+                </div>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900">Scan QR Code</h3>
+                <p class="text-sm text-gray-500">Open WhatsApp on your phone</p>
+              </div>
+            </div>
+            <button id="closeQRModalBtn" class="text-gray-400 hover:text-gray-600 transition-colors duration-150 p-1 rounded-lg hover:bg-gray-100">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          
+          <!-- Modal Body -->
+          <div class="p-6">
+            <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-8 mb-6 flex justify-center">
+              <div class="bg-white p-4 rounded-lg shadow-lg">
+                <img id="qrImage" src="" alt="QR Code" class="w-64 h-64">
+              </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <div class="flex items-start space-x-3 mb-3">
+                <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                <p class="text-sm text-blue-900">Open WhatsApp on your phone</p>
+              </div>
+              <div class="flex items-start space-x-3 mb-3">
+                <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                <p class="text-sm text-blue-900">Tap <strong>Menu</strong> or <strong>Settings</strong> and select <strong>Linked Devices</strong></p>
+              </div>
+              <div class="flex items-start space-x-3">
+                <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                <p class="text-sm text-blue-900">Point your phone at this screen to scan the code</p>
+              </div>
+            </div>
+
+            <!-- Warning -->
+            <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+              <p class="text-xs text-amber-800">
+                <strong>Note:</strong> QR code expires in 60 seconds. Refresh if needed.
+              </p>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center justify-between">
+              <div id="connectionStatus" class="flex items-center text-sm text-gray-500">
+                <span class="relative flex h-3 w-3 mr-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-primary-500"></span>
+                </span>
+                <span id="connectionStatusText">Waiting for scan...</span>
+              </div>
+              <button id="refreshQR" class="btn btn-secondary">
+                <svg class="w-4 h-4 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Refresh Code
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Device API Key Display -->
+      <div id="apiKeySection" class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-6 mt-6 hidden">
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0">
+            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+              </svg>
+            </div>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-green-900 mb-2">API Key Generated!</h3>
+            <p class="text-green-800 mb-3">Your device API key has been created. Save it securely - it won't be shown again.</p>
+            <p class="text-sm text-green-700 mb-4">Use this key for REST API requests specific to this WhatsApp account.</p>
+            <div class="bg-white p-4 rounded-lg border-2 border-green-300 mb-4 shadow-sm">
+              <code id="deviceApiKeyValue" class="text-sm font-mono break-all text-gray-800"></code>
+            </div>
+            <button id="copyApiKeyBtn" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-150">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              Copy to Clipboard
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status Display -->
+      <div id="statusSection" class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mt-6 hidden">
+        <div class="text-center">
+          <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h3 class="text-2xl font-bold text-gray-900 mb-2">Connection Successful!</h3>
+          <p id="statusText" class="text-lg text-gray-700 mb-6"></p>
+          <a href="/accounts" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-lg shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-150">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+            Go to Accounts
+          </a>
+        </div>
+      </div>
+
+      <!-- Success Modal -->
+      <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full transform transition-all duration-300 scale-95 opacity-0" id="successModalContent">
+          <!-- Success Animation -->
+          <div class="p-8 text-center">
+            <div class="relative mx-auto w-24 h-24 mb-6">
+              <!-- Animated Circle -->
+              <div class="absolute inset-0 rounded-full bg-green-100 animate-ping opacity-30"></div>
+              <div class="relative flex items-center justify-center w-24 h-24 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full shadow-lg">
+                <svg class="w-12 h-12 text-white success-checkmark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+            
+            <h3 class="text-2xl font-bold text-gray-900 mb-2">Connected Successfully!</h3>
+            <p class="text-gray-600 mb-2">Your WhatsApp account is now linked</p>
+            <p id="connectedPhoneNumber" class="text-lg font-semibold text-primary-600 mb-6"></p>
+            
+            <!-- Connection Info -->
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 mb-6">
+              <div class="flex items-center justify-center space-x-2 text-green-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span class="font-medium">Secure connection established</span>
+              </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3">
+              <a href="/accounts" class="flex-1 inline-flex items-center justify-center px-4 py-3 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-lg shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-150">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+                Go to Accounts
+              </a>
+              <button id="connectAnotherBtn" class="flex-1 inline-flex items-center justify-center px-4 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-150">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Connect Another
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <style>
+    .success-checkmark {
+      stroke-dasharray: 50;
+      stroke-dashoffset: 50;
+      animation: checkmark 0.6s ease-out 0.3s forwards;
+    }
+    
+    @keyframes checkmark {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+    
+    #successModalContent.show {
+      transform: scale(1);
+      opacity: 1;
+    }
+  </style>
+
+  <script>
+    // Debug logging - disabled in production
+    const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const debugLog = isDev ? console.log.bind(console) : () => {};
+
+    const connectBtn = document.getElementById('connectBtn');
+    const connectForm = document.getElementById('connectForm');
+    const qrModal = document.getElementById('qrModal');
+    const qrImage = document.getElementById('qrImage');
+    const closeQRModalBtn = document.getElementById('closeQRModalBtn');
+    const apiKeySection = document.getElementById('apiKeySection');
+    const deviceApiKeyValue = document.getElementById('deviceApiKeyValue');
+    const statusSection = document.getElementById('statusSection');
+    const statusText = document.getElementById('statusText');
+    const successModal = document.getElementById('successModal');
+    const successModalContent = document.getElementById('successModalContent');
+    const connectedPhoneNumber = document.getElementById('connectedPhoneNumber');
+    let currentAccountId = null;
+    let currentDeviceApiKey = null;
+
+    // Modal functions
+    function openQRModal() {
+      qrModal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    }
+
+    function closeQRModal() {
+      stopAllPolling(); // Stop all polling when modal is closed
+      qrModal.classList.add('hidden');
+      document.body.style.overflow = ''; // Restore scrolling
+    }
+
+    function openSuccessModal(phoneNumber) {
+      // Set the phone number display
+      if (phoneNumber) {
+        connectedPhoneNumber.textContent = phoneNumber;
+        connectedPhoneNumber.classList.remove('hidden');
+      } else {
+        connectedPhoneNumber.classList.add('hidden');
+      }
+      
+      // Show modal
+      successModal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      
+      // Animate in
+      setTimeout(() => {
+        successModalContent.classList.add('show');
+      }, 50);
+    }
+
+    function closeSuccessModal() {
+      successModalContent.classList.remove('show');
+      setTimeout(() => {
+        successModal.classList.add('hidden');
+        document.body.style.overflow = '';
+      }, 300);
+    }
+
+    // Connect Another button handler
+    document.getElementById('connectAnotherBtn')?.addEventListener('click', () => {
+      closeSuccessModal();
+      // Reset form
+      document.getElementById('phoneNumber').value = '';
+      document.getElementById('displayName').value = '';
+      // Reset button
+      connectBtn.disabled = false;
+      connectBtn.innerHTML = `
+        <svg class="w-5 h-5 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        Connect WhatsApp Account
+      `;
+      // Hide API key section if shown
+      apiKeySection.classList.add('hidden');
+      // Hide status section
+      statusSection.classList.add('hidden');
+      currentAccountId = null;
+      currentDeviceApiKey = null;
+    });
+
+    // Close modal handlers
+    closeQRModalBtn.addEventListener('click', closeQRModal);
+    qrModal.addEventListener('click', (e) => {
+      if (e.target === qrModal) {
+        closeQRModal();
+      }
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (!successModal.classList.contains('hidden')) {
+          closeSuccessModal();
+        } else if (!qrModal.classList.contains('hidden')) {
+          closeQRModal();
+        }
+      }
+    });
+
+    // Close success modal when clicking outside
+    successModal.addEventListener('click', (e) => {
+      if (e.target === successModal) {
+        closeSuccessModal();
+      }
+    });
+
+    connectForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const phoneNumber = document.getElementById('phoneNumber').value.trim();
+      const displayName = document.getElementById('displayName').value.trim();
+      
+      // Validate phone number
+      if (!phoneNumber) {
+        Toast.warning('Please enter a phone number');
+        return;
+      }
+      
+      try {
+        connectBtn.disabled = true;
+        connectBtn.innerHTML = `
+          <svg class="w-5 h-5 mr-2 inline-block animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Connecting...
+        `;
+
+        const response = await axios.post('/api/whatsapp/devices', {
+          provider: 'default',
+          phoneNumber: phoneNumber,
+          displayName: displayName || null
+        }, {
+          headers: {
+            'Authorization': `Bearer <%= (typeof accessToken !== 'undefined') ? accessToken : '' %>`
+          }
+        });
+
+        currentAccountId = response.data.data.id;
+
+        // Show device API key if provided
+        if (response.data.data.deviceApiKey) {
+          currentDeviceApiKey = response.data.data.deviceApiKey;
+          deviceApiKeyValue.textContent = currentDeviceApiKey;
+          apiKeySection.classList.remove('hidden');
+        }
+
+        if (response.data.data.qrCode) {
+          qrImage.src = response.data.data.qrCode;
+          qrReceived = true;
+          openQRModal();
+          
+          // Start both QR and status polling
+          // QR keeps refreshing, status checks for connection
+          debugLog('📱 Account created, starting QR and status polling...');
+          startQRPolling();
+          // Ensure status polling starts immediately
+          if (!statusPollingInterval) {
+            startStatusPolling();
+          }
+        } else if (response.data.data.status === 'connected') {
+          // Already connected - show success modal
+          const phoneNumber = response.data.data.phoneNumber || '';
+          openSuccessModal(phoneNumber);
+          showStatus('✅ Account connected successfully! Phone: ' + phoneNumber);
+          // Reset button
+          connectBtn.disabled = false;
+          connectBtn.innerHTML = `
+            <svg class="w-5 h-5 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            Connect WhatsApp Account
+          `;
+        } else {
+          // QR not ready yet, show loading and start polling for QR
+          openQRModal();
+          qrImage.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iI2Y5ZmFmYiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzZiNzI4MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+R2VuZXJhdGluZyBRUi4uLjwvdGV4dD48L3N2Zz4=';
+          debugLog('⏳ QR not ready, starting QR and status polling...');
+          startQRPolling();
+          // Also start status polling immediately for QR waiting state
+          if (!statusPollingInterval) {
+            startStatusPolling();
+          }
+        }
+      } catch (error) {
+        Toast.error('Error: ' + (error.response?.data?.error || error.message));
+        connectBtn.disabled = false;
+        connectBtn.innerHTML = `
+          <svg class="w-5 h-5 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          Connect WhatsApp Account
+        `;
+      }
+    });
+
+    let qrPollingInterval = null;
+    let statusPollingInterval = null;
+    let qrReceived = false;
+
+    function stopQRPolling() {
+      if (qrPollingInterval) {
+        clearInterval(qrPollingInterval);
+        qrPollingInterval = null;
+      }
+    }
+
+    function stopStatusPolling() {
+      if (statusPollingInterval) {
+        clearInterval(statusPollingInterval);
+        statusPollingInterval = null;
+      }
+    }
+
+    function stopAllPolling() {
+      stopQRPolling();
+      stopStatusPolling();
+    }
+
+    function startQRPolling() {
+      stopQRPolling(); // Clear any existing interval
+      // Note: Don't reset qrReceived here - it may already be true from initial response
+      let qrPollAttempts = 0;
+      const maxQRAttempts = 60; // 60 attempts * 2 seconds = 120 seconds max (QR refreshes every ~20s)
+      
+      debugLog('🔄 Starting QR polling...');
+      
+      qrPollingInterval = setInterval(async () => {
+        qrPollAttempts++;
+        
+        // Skip if modal is closed
+        if (qrModal.classList.contains('hidden')) {
+          stopAllPolling();
+          return;
+        }
+        
+        try {
+          const response = await axios.get(`/api/whatsapp/devices/${currentAccountId}/qr`, {
+            headers: {
+              'Authorization': `Bearer <%= (typeof accessToken !== 'undefined') ? accessToken : '' %>`
+            }
+          });
+
+          // Check if QR is available - keep updating QR image even after first receive
+          if (response.data.success && response.data.data.qrCode) {
+            qrImage.src = response.data.data.qrCode;
+            
+            if (!qrReceived) {
+              qrReceived = true;
+              debugLog('✅ First QR code received! Continuing to poll for updates...');
+              updateConnectionStatusText('Scan the QR code with WhatsApp', true);
+            } else {
+              debugLog('🔄 QR code refreshed');
+              updateConnectionStatusText('QR refreshed - scan now', true);
+            }
+            
+            // Always ensure status polling is running when QR is available
+            if (!statusPollingInterval) {
+              debugLog('🔄 Starting status polling from QR poll...');
+              startStatusPolling();
+            }
+          } else {
+            debugLog(`⏳ Waiting for QR... (attempt ${qrPollAttempts}/${maxQRAttempts})`);
+            updateConnectionStatusText('Generating QR code...', true);
+          }
+        } catch (error) {
+          console.error('QR poll error:', error);
+        }
+        
+        // Stop on max attempts (timeout)
+        if (qrPollAttempts >= maxQRAttempts) {
+          stopAllPolling();
+          closeQRModal();
+          showStatus('❌ QR code generation timeout. Please try reconnecting.');
+        }
+      }, 2000); // Poll every 2 seconds for QR updates
+    }
+
+    function startStatusPolling() {
+      stopStatusPolling(); // Clear any existing interval
+      
+      debugLog('🔄 Starting status polling for account:', currentAccountId);
+      
+      statusPollingInterval = setInterval(async () => {
+        // Skip if QR modal is closed AND success modal is also closed (user cancelled)
+        if (qrModal.classList.contains('hidden') && successModal.classList.contains('hidden')) {
+          debugLog('⏸️ Status polling paused - no modal open');
+          stopAllPolling();
+          return;
+        }
+        
+        try {
+          const response = await axios.get(`/api/whatsapp/devices/${currentAccountId}/status`, {
+            headers: {
+              'Authorization': `Bearer <%= (typeof accessToken !== 'undefined') ? accessToken : '' %>`
+            }
+          });
+
+          const status = response.data?.data?.status || response.data?.status;
+          const phoneNumber = response.data?.data?.phoneNumber || response.data?.phoneNumber || '';
+          debugLog('📊 Status check:', status, 'Phone:', phoneNumber);
+
+          // Update status text based on current state
+          if (status === 'connecting') {
+            updateConnectionStatusText('Waiting for scan...', true);
+          } else if (status === 'authenticating') {
+            updateConnectionStatusText('Authenticating...', true);
+          }
+
+          if (status === 'connected') {
+            debugLog('✅ Device connected! Stopping all polling...');
+            updateConnectionStatusText('Connected!', false);
+            
+            stopAllPolling(); // Stop both QR and status polling
+            
+            // Brief delay to show "Connected!" before closing modal
+            setTimeout(() => {
+              closeQRModal();
+              
+              // Show success modal
+              openSuccessModal(phoneNumber);
+              
+              // Also update the status section (as backup)
+              showStatus('✅ Account connected successfully! Phone: ' + phoneNumber);
+              
+              // Reset the connect button for next use
+              connectBtn.disabled = false;
+              connectBtn.innerHTML = `
+                <svg class="w-5 h-5 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Connect WhatsApp Account
+              `;
+            }, 500);
+          }
+        } catch (error) {
+          console.error('Status poll error:', error);
+          // Don't stop polling on error - might be temporary network issue
+        }
+      }, 2000); // Poll every 2 seconds for faster detection
+
+      debugLog('✅ Status polling interval started');
+
+      // Stop polling after 2 minutes
+      setTimeout(() => {
+        if (statusPollingInterval) {
+          debugLog('⏱️ Status polling timeout reached (2 minutes)');
+          stopAllPolling();
+        }
+      }, 120000);
+    }
+
+    function showStatus(message) {
+      statusText.textContent = message;
+      statusSection.classList.remove('hidden');
+    }
+
+    function updateConnectionStatusText(text, isConnecting = true) {
+      const statusTextEl = document.getElementById('connectionStatusText');
+      if (statusTextEl) {
+        statusTextEl.textContent = text;
+      }
+      
+      // Update the pulsing indicator color
+      const statusIndicator = document.querySelector('#connectionStatus .animate-ping');
+      const statusDot = document.querySelector('#connectionStatus .relative.inline-flex');
+      
+      if (isConnecting) {
+        statusIndicator?.classList.remove('bg-green-400');
+        statusIndicator?.classList.add('bg-primary-400');
+        statusDot?.classList.remove('bg-green-500');
+        statusDot?.classList.add('bg-primary-500');
+      } else {
+        statusIndicator?.classList.remove('bg-primary-400');
+        statusIndicator?.classList.add('bg-green-400');
+        statusDot?.classList.remove('bg-primary-500');
+        statusDot?.classList.add('bg-green-500');
+      }
+    }
+
+    function copyApiKey() {
+      if (currentDeviceApiKey) {
+        navigator.clipboard.writeText(currentDeviceApiKey);
+        Toast.success('Device API key copied to clipboard!');
+      }
+    }
+
+    // Copy API key button handler
+    document.getElementById('copyApiKeyBtn')?.addEventListener('click', copyApiKey);
+
+    // Refresh QR code button handler
+    document.getElementById('refreshQR').addEventListener('click', async () => {
+      try {
+        // Show loading state
+        qrImage.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iI2Y5ZmFmYiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzZiNzI4MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+TG9hZGluZy4uLjwvdGV4dD48L3N2Zz4=';
+        
+        // Stop current polling and restart fresh
+        stopQRPolling();
+        qrReceived = false;
+        
+        const response = await axios.get(`/api/whatsapp/devices/${currentAccountId}/qr`, {
+          headers: {
+            'Authorization': `Bearer <%= (typeof accessToken !== 'undefined') ? accessToken : '' %>`
+          }
+        });
+
+        if (response.data.success && response.data.data.qrCode) {
+          qrImage.src = response.data.data.qrCode;
+          qrReceived = true;
+          debugLog('✅ QR code refreshed manually!');
+        }
+        
+        // Always restart QR polling to keep updating
+        debugLog('🔄 Restarting QR polling...');
+        startQRPolling();
+        
+      } catch (error) {
+        console.error('Refresh QR error:', error);
+        Toast.error('Error refreshing QR code: ' + (error.response?.data?.error || error.message));
+        // Still try to start polling on error
+        startQRPolling();
+      }
+    });
+
+    // Cleanup on page visibility change (pause polling when tab is hidden)
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        // Tab is hidden, pause polling to save resources
+        stopAllPolling();
+      } else if (currentAccountId && !qrModal.classList.contains('hidden')) {
+        // Tab is visible again and modal is open, resume polling
+        startQRPolling();
+      }
+    });
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+      stopAllPolling();
+    });
+  </script>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>
+

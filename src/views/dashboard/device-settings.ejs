@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - WhatsApp Gateway</title>
+  <link rel="stylesheet" href="/css/output.css">
+  <script src="/js/vendor/axios.min.js"></script>
+  <script>
+    axios.defaults.withCredentials = true;
+  </script>
+  <style>
+    /* Toggle switch styles */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .toggle-slider {
+      background-color: #3b82f6;
+    }
+    input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+    }
+    /* Tab active state */
+    .tab-button.active {
+      border-bottom-color: #3b82f6;
+      color: #3b82f6;
+    }
+    /* Card styling matching settings.html */
+    .settings-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .settings-section {
+      border-top: 1px solid #e5e7eb;
+      padding-top: 20px;
+      margin-top: 20px;
+    }
+    .settings-section:first-child {
+      border-top: none;
+      padding-top: 0;
+      margin-top: 0;
+    }
+    /* Product item - collapsible card */
+    .product-item {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #f9fafb;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    .product-item-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: #f3f4f6;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .product-item-toggle {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      text-align: left;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #374151;
+      font-weight: 500;
+    }
+    .product-item-toggle:hover {
+      color: #2563eb;
+    }
+    .product-item-collapse {
+      display: none;
+      padding: 12px;
+    }
+    .product-item-collapse.show {
+      display: block;
+    }
+    .product-item-content {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: 12px;
+    }
+    .product-image-container {
+      width: 80px;
+      height: 80px;
+      border: 2px dashed #d1d5db;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      overflow: hidden;
+      background: white;
+    }
+    .product-image-container:hover {
+      border-color: #3b82f6;
+    }
+    .product-image-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .product-image-placeholder {
+      color: #9ca3af;
+      font-size: 24px;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 antialiased">
+  <!-- Navigation matching dashboard header -->
+  <header class="bg-white border-b border-gray-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+      <div class="flex items-center space-x-4">
+        <a href="/dashboard" class="text-xl font-semibold text-gray-900 hover:text-blue-600 transition-colors">WhatsApp Gateway</a>
+        <span class="text-gray-300">|</span>
+        <span class="text-sm text-gray-600">Device Settings</span>
+      </div>
+      <div class="flex items-center space-x-4">
+        <a href="/accounts" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Back to Devices
+        </a>
+        <a href="/auth/logout" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          Logout
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="container mx-auto p-6 max-w-4xl">
+    <!-- Device Info Header -->
+    <div class="settings-card">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <div class="w-14 h-14 rounded-full <%= account.status === 'connected' ? 'bg-green-100' : 'bg-gray-100' %> flex items-center justify-center">
+              <% if (account.status === 'connected') { %>
+                <svg class="w-7 h-7 text-green-600" fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              <% } else { %>
+                <svg class="w-7 h-7 text-gray-500" fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              <% } %>
+            </div>
+            <div>
+            <h2 class="text-xl font-bold text-gray-900"><%= account.display_name %></h2>
+              <p class="text-sm text-gray-600"><%= account.phone_number %></p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium <%= account.status === 'connected' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' %>">
+              <span class="w-2 h-2 rounded-full mr-2 <%= account.status === 'connected' ? 'bg-green-500' : 'bg-gray-400' %>"></span>
+              <%= account.status === 'connected' ? 'Connected' : account.status %>
+            </span>
+          <button id="refreshSettingsBtn" class="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-300 rounded-lg hover:bg-blue-50">
+            🔄 Refresh
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <% if (account.status !== 'connected') { %>
+        <!-- Not Connected Warning -->
+      <div class="settings-card bg-amber-50 border border-amber-200 text-center">
+          <svg class="w-12 h-12 mx-auto text-amber-500 mb-4" fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+            <path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <h3 class="text-lg font-semibold text-amber-800 mb-2">Device Not Connected</h3>
+          <p class="text-amber-700 mb-4">Settings can only be configured when the device is connected.</p>
+          <a href="/accounts" class="inline-flex items-center px-4 py-2 text-sm font-medium text-amber-800 bg-amber-100 border border-amber-300 rounded-lg hover:bg-amber-200">
+            Go to Devices
+          </a>
+        </div>
+      <% } else { %>
+      <!-- Tabs matching settings.html -->
+      <div class="bg-white rounded-lg shadow-sm mb-6">
+        <div class="border-b border-gray-200">
+          <nav class="flex -mb-px">
+            <button id="aiSettingsTab" class="tab-button active flex-1 py-4 px-6 text-center border-b-2 border-blue-500 text-blue-600 font-medium">
+              🤖 AI Settings
+            </button>
+            <button id="businessConfigTab" class="tab-button flex-1 py-4 px-6 text-center border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium">
+              💼 Business Config
+            </button>
+            <button id="testingTab" class="tab-button flex-1 py-4 px-6 text-center border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium">
+              🧪 Testing
+            </button>
+          </nav>
+        </div>
+        </div>
+
+        <!-- AI Settings Tab Panel -->
+        <div id="aiSettingsPanel" class="tab-panel">
+        <form id="aiSettingsForm">
+          <div class="settings-card">
+            <h3 class="text-lg font-bold text-gray-900 mb-6 flex items-center">
+              🤖 AI Configuration
+            </h3>
+            
+            <!-- Toggle Switches Row -->
+            <div class="grid grid-cols-2 gap-6 mb-6">
+                <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                  <label class="text-sm font-medium text-gray-700">Enable AI Assistant</label>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="enableAI" name="is_enabled">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+                <div class="flex items-center justify-between">
+                  <label class="text-sm font-medium text-gray-700">Auto Reply</label>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="autoReply" name="auto_reply_enabled">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <label class="text-sm font-medium text-gray-700">Require Triggers</label>
+                    <span class="text-xs text-gray-500 block">(If off, AI responds to any message)</span>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="requireTrigger" name="require_trigger">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+                <div class="flex items-center justify-between">
+                  <label class="text-sm font-medium text-gray-700">Conversation Memory</label>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="conversationMemory" name="conversation_memory_enabled" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+                </div>
+                
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Bot Name</label>
+                  <input type="text" id="botName" name="bot_name" value="Assistant" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Primary Language</label>
+                  <select id="primaryLanguage" name="language" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="id">Bahasa Indonesia</option>
+                    <option value="en" selected>English</option>
+                    <option value="ms">Bahasa Melayu</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- System Prompt -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">System Prompt</label>
+              <textarea id="systemPrompt" name="system_prompt" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="You are a helpful AI assistant..."></textarea>
+              </div>
+
+              <!-- Trigger Word -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Trigger Word</label>
+              <input type="text" id="triggerWord" name="trigger_word" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., @ai or @bot">
+                <p class="mt-1 text-xs text-gray-500">AI will respond when messages contain this word</p>
+              </div>
+
+              <!-- AI Rule -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">AI Rules</label>
+              <textarea id="aiRule" name="ai_rule" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Additional rules for AI behavior..."></textarea>
+              </div>
+
+              <!-- Save Button -->
+              <div class="pt-4 border-t border-gray-200">
+              <button type="submit" class="w-full inline-flex justify-center items-center px-6 py-3 text-base font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 shadow-lg transition-colors">
+                  💾 Save AI Settings
+                </button>
+              </div>
+              </div>
+            </form>
+        </div>
+
+        <!-- Business Config Tab Panel -->
+        <div id="businessConfigPanel" class="tab-panel hidden">
+        <form id="businessConfigForm">
+          <div class="settings-card">
+            <h3 class="text-lg font-bold text-gray-900 mb-6 flex items-center">
+              💼 Business Intelligence
+            </h3>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Business Type</label>
+                <select id="businessType" name="business_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Select business type...</option>
+                  <option value="automotive">🚗 Automotive</option>
+                  <option value="beauty">💄 Beauty</option>
+                  <option value="ecommerce">🛒 E-commerce</option>
+                  <option value="education">📚 Education</option>
+                  <option value="finance">💰 Finance</option>
+                  <option value="healthcare">🏥 Healthcare</option>
+                  <option value="real_estate">🏠 Real Estate</option>
+                  <option value="restaurant">🍕 Restaurant</option>
+                  <option value="travel">✈️ Travel</option>
+                  <option value="other">🔧 Custom</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Template Language</label>
+                <select id="templateLanguage" name="template_language" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value="id">Bahasa Indonesia</option>
+                  <option value="en" selected>English</option>
+                  <option value="ms">Bahasa Melayu</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Template Actions -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Template Action</label>
+                <div class="flex space-x-3">
+                <button type="button" id="loadBusinessTemplateBtn" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                    🔄 Load Business Template
+                  </button>
+                <button type="button" id="previewTemplateBtn" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                    👁️ Preview Template
+                  </button>
+                </div>
+              </div>
+
+              <!-- Product Knowledge Base -->
+            <div class="settings-section">
+                <div class="flex items-center justify-between mb-4">
+                  <h4 class="text-md font-semibold text-gray-900">📦 Product Knowledge Base</h4>
+                <button type="button" id="addProductBtn" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-300 rounded-lg hover:bg-blue-100">
+                    ➕ Add Product/Service
+                  </button>
+                </div>
+              
+                <div id="productKnowledgeList" class="space-y-2 mb-4">
+                  <!-- Products will be dynamically added here -->
+                </div>
+              
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Other Product Information</label>
+                <textarea id="productKnowledgeOther" name="product_knowledge_other" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Additional product information not covered above..."></textarea>
+                <p class="mt-1 text-xs text-gray-500">Any other product or service information</p>
+                </div>
+              </div>
+
+              <!-- Sales Scripts & Response -->
+            <div class="settings-section">
+                <div class="flex items-center justify-between mb-4">
+                  <h4 class="text-md font-semibold text-gray-900">💬 Sales Scripts & Response</h4>
+                <button type="button" id="addScriptBtn" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-300 rounded-lg hover:bg-blue-100">
+                    ➕ Add Script
+                  </button>
+                </div>
+              
+                <div id="salesScriptsList" class="space-y-2 mb-4">
+                  <!-- Scripts will be dynamically added here -->
+                </div>
+              
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Detailed Response Command</label>
+                <textarea id="salesScriptsDetailed" name="sales_scripts_detailed" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Instructions for generating detailed sales responses..."></textarea>
+                <p class="mt-1 text-xs text-gray-500">Commands for generating detailed responses</p>
+                </div>
+              </div>
+
+              <!-- Upsell and Objection Handling -->
+            <div class="settings-section">
+              <h4 class="text-md font-semibold text-gray-900 mb-4">📈 Sales Enhancement</h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">💰 Upsell & Cross-sell Strategies</label>
+                  <p class="text-xs text-gray-500 mb-2">Define additional products/services to recommend when customers show interest. AI will suggest these naturally during conversations.</p>
+                  <textarea id="upsellStrategies" name="upsell_strategies" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Example:
+- accessories: Official accessories for comfort
+- extended_warranty: Extended warranty package
+- insurance: Comprehensive insurance coverage"></textarea>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">🛡️ Objection Handling Responses</label>
+                  <p class="text-xs text-gray-500 mb-2">Prepare responses for common customer objections like price concerns, competitor comparisons, or hesitation. AI will use these to address concerns.</p>
+                  <textarea id="objectionHandling" name="objection_handling" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Example:
+- too_expensive: We offer flexible payment plans...
+- need_to_think: I understand, here's more info...
+- competitor: Our unique advantages are..."></textarea>
+                </div>
+                </div>
+              </div>
+
+            <!-- Save Button -->
+            <div class="pt-4 border-t border-gray-200 mt-6">
+              <button type="submit" class="w-full inline-flex justify-center items-center px-6 py-3 text-base font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 shadow-lg transition-colors">
+                  💾 Save Business Configuration
+                </button>
+              </div>
+              </div>
+            </form>
+        </div>
+
+        <!-- Testing Tab Panel -->
+        <div id="testingPanel" class="tab-panel hidden">
+        <div class="settings-card">
+          <h3 class="text-lg font-bold text-gray-900 mb-6 flex items-center">
+            🧪 Test AI Response
+            </h3>
+            
+          <form id="testingForm">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Test Message</label>
+              <textarea id="testMessage" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter a test message to see how AI responds..."></textarea>
+              </div>
+            <div class="mb-4">
+              <button type="button" id="testAIResponseBtn" class="inline-flex items-center px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                🔮 Test AI Response
+                </button>
+              </div>
+            <div id="testResponse" class="hidden p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h4 class="text-sm font-medium text-gray-700 mb-2">AI Response:</h4>
+              <p id="testResponseText" class="text-sm text-gray-600 whitespace-pre-wrap"></p>
+              </div>
+            </form>
+          </div>
+        </div>
+      <% } %>
+  </div>
+
+  <!-- Hidden file input for product images -->
+  <input type="file" id="productImageInput" accept="image/*" class="hidden">
+
+  <!-- Toast notification -->
+  <div id="toast" class="fixed bottom-4 right-4 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+    <div class="bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3">
+      <span id="toastIcon">✓</span>
+      <span id="toastMessage">Message</span>
+    </div>
+  </div>
+
+  <script>
+    // Debug logging - disabled in production
+    const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const debugLog = isDev ? console.log.bind(console) : () => {};
+
+    // Account ID from route
+    const accountId = <%= account.id %>;
+    const accessToken = '<%= (typeof accessToken !== "undefined") ? accessToken : "" %>';
+    
+    // Toast notification helper
+    const Toast = {
+      show: (message, type = 'success') => {
+        const toast = document.getElementById('toast');
+        const toastIcon = document.getElementById('toastIcon');
+        const toastMessage = document.getElementById('toastMessage');
+        
+        toastMessage.textContent = message;
+        toastIcon.textContent = type === 'success' ? '✓' : type === 'error' ? '✕' : type === 'warning' ? '⚠' : 'ℹ';
+        
+        toast.querySelector('div').className = `px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 ${
+          type === 'success' ? 'bg-green-600 text-white' :
+          type === 'error' ? 'bg-red-600 text-white' :
+          type === 'warning' ? 'bg-yellow-500 text-white' :
+          'bg-blue-600 text-white'
+        }`;
+        
+        toast.classList.remove('translate-y-20', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+        
+        setTimeout(() => {
+          toast.classList.add('translate-y-20', 'opacity-0');
+          toast.classList.remove('translate-y-0', 'opacity-100');
+        }, 3000);
+      },
+      success: (msg) => Toast.show(msg, 'success'),
+      error: (msg) => Toast.show(msg, 'error'),
+      warning: (msg) => Toast.show(msg, 'warning'),
+      info: (msg) => Toast.show(msg, 'info')
+    };
+    
+    // Tab elements
+    const aiSettingsTab = document.getElementById('aiSettingsTab');
+    const businessConfigTab = document.getElementById('businessConfigTab');
+    const testingTab = document.getElementById('testingTab');
+    const aiSettingsPanel = document.getElementById('aiSettingsPanel');
+    const businessConfigPanel = document.getElementById('businessConfigPanel');
+    const testingPanel = document.getElementById('testingPanel');
+
+    // Tab switching
+    function switchTab(tabName) {
+      if (!aiSettingsTab) return;
+      
+      // Reset all tabs
+      [aiSettingsTab, businessConfigTab, testingTab].forEach(tab => {
+        if (tab) {
+          tab.classList.remove('active', 'border-blue-500', 'text-blue-600');
+          tab.classList.add('border-transparent', 'text-gray-500');
+        }
+      });
+      [aiSettingsPanel, businessConfigPanel, testingPanel].forEach(panel => {
+        if (panel) panel.classList.add('hidden');
+      });
+
+      // Activate selected tab
+      const tabMap = {
+        'ai': { tab: aiSettingsTab, panel: aiSettingsPanel },
+        'business': { tab: businessConfigTab, panel: businessConfigPanel },
+        'testing': { tab: testingTab, panel: testingPanel }
+      };
+      
+      if (tabMap[tabName]) {
+        tabMap[tabName].tab.classList.add('active', 'border-blue-500', 'text-blue-600');
+        tabMap[tabName].tab.classList.remove('border-transparent', 'text-gray-500');
+        tabMap[tabName].panel.classList.remove('hidden');
+      }
+    }
+
+    // Load AI settings from service
+    async function loadAISettings() {
+      try {
+        debugLog('Loading AI settings from service...');
+        const response = await axios.get(`/api/whatsapp/devices/${accountId}/settings/ai`, {
+          headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+
+        if (response.data.success) {
+          const settings = response.data.data;
+          debugLog('AI settings loaded:', settings);
+
+          // Populate AI Settings form
+          if (document.getElementById('enableAI')) document.getElementById('enableAI').checked = settings.is_enabled || false;
+          if (document.getElementById('autoReply')) document.getElementById('autoReply').checked = settings.auto_reply_enabled || false;
+          if (document.getElementById('requireTrigger')) document.getElementById('requireTrigger').checked = settings.require_trigger || false;
+          if (document.getElementById('conversationMemory')) document.getElementById('conversationMemory').checked = settings.conversation_memory_enabled !== false;
+          if (document.getElementById('botName')) document.getElementById('botName').value = settings.bot_name || 'Assistant';
+          if (document.getElementById('primaryLanguage')) document.getElementById('primaryLanguage').value = settings.language || 'en';
+          if (document.getElementById('systemPrompt')) document.getElementById('systemPrompt').value = settings.system_prompt || '';
+          if (document.getElementById('triggerWord')) document.getElementById('triggerWord').value = settings.trigger_word || '';
+          if (document.getElementById('aiRule')) document.getElementById('aiRule').value = settings.ai_rule || '';
+
+          // Populate Business Config form
+          if (document.getElementById('businessType')) document.getElementById('businessType').value = settings.business_type || '';
+          if (document.getElementById('templateLanguage')) document.getElementById('templateLanguage').value = settings.template_language || 'en';
+          if (document.getElementById('productKnowledgeOther')) document.getElementById('productKnowledgeOther').value = settings.product_knowledge?.otherDescription || '';
+          if (document.getElementById('salesScriptsDetailed')) document.getElementById('salesScriptsDetailed').value = settings.sales_scripts?.detailedResponse || '';
+          if (document.getElementById('upsellStrategies')) {
+            const upsellValue = settings.upsell_strategies;
+            document.getElementById('upsellStrategies').value = formatObjectToText(upsellValue);
+          }
+          if (document.getElementById('objectionHandling')) {
+            const objectionValue = settings.objection_handling;
+            document.getElementById('objectionHandling').value = formatObjectToText(objectionValue);
+          }
+
+          // Load product knowledge items
+          if (settings.product_knowledge?.items && Array.isArray(settings.product_knowledge.items)) {
+            const productList = document.getElementById('productKnowledgeList');
+            if (productList) {
+              productList.innerHTML = '';
+              settings.product_knowledge.items.forEach(item => {
+                addProductItem(item.name, item.description, item.imageUrl);
+              });
+            }
+          }
+
+          // Load sales script items
+          if (settings.sales_scripts?.items && Array.isArray(settings.sales_scripts.items)) {
+            const scriptList = document.getElementById('salesScriptsList');
+            if (scriptList) {
+              scriptList.innerHTML = '';
+              settings.sales_scripts.items.forEach(item => {
+                // Pass full item object with name and response
+                addScriptItem({
+                  id: item.id,
+                  name: item.name || '',
+                  response: item.response || item.script || item.text || ''
+                });
+              });
+            }
+          }
+
+          debugLog('AI settings loaded and form populated successfully');
+        }
+      } catch (error) {
+        console.error('Failed to load AI settings:', error);
+        Toast.error('Failed to load AI settings: ' + (error.response?.data?.error || error.message));
+      }
+    }
+
+    // Add Product Item (collapsible card)
+    let productCounter = 0;
+    function addProductItem(name = '', description = '', imageUrl = '') {
+      const productList = document.getElementById('productKnowledgeList');
+      if (!productList) return;
+      
+      const itemId = `product_${productCounter++}`;
+      const productItem = document.createElement('div');
+      productItem.className = 'product-item';
+      productItem.id = `productItem_${itemId}`;
+      productItem.innerHTML = `
+        <div class="product-item-header">
+          <button type="button" class="product-item-toggle" data-item-id="${itemId}">
+            <span class="collapse-icon mr-2 text-gray-500">▶</span>
+            <strong class="product-header">${escapeHtml(name) || 'New Product/Service'}</strong>
+          </button>
+          <button type="button" class="remove-product text-red-600 hover:text-red-800 text-sm px-2" data-item-id="${itemId}">🗑️ Remove</button>
+        </div>
+        <div class="product-item-collapse">
+          <div class="product-item-content">
+            <div class="product-image-container" data-item-id="${itemId}">
+              ${imageUrl ? `<img src="${imageUrl}" alt="Product">` : '<span class="product-image-placeholder">📷</span>'}
+            </div>
+            <div class="space-y-2">
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Product/Service Name *</label>
+                <input type="text" class="product-name w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500" value="${escapeHtml(name)}" placeholder="e.g., Honda Civic, iPhone 15">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Description</label>
+                <textarea class="product-desc w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500" rows="2" placeholder="Product description...">${escapeHtml(description)}</textarea>
+              </div>
+              <input type="hidden" class="product-image-url" value="${escapeHtml(imageUrl)}">
+            </div>
+          </div>
+        </div>
+      `;
+      productList.appendChild(productItem);
+    }
+    
+    // Toggle product collapse
+    function toggleProductCollapse(itemId) {
+      const item = document.getElementById(`productItem_${itemId}`);
+      if (!item) return;
+      
+      const collapseContent = item.querySelector('.product-item-collapse');
+      const icon = item.querySelector('.collapse-icon');
+      
+      if (collapseContent.classList.contains('show')) {
+        collapseContent.classList.remove('show');
+        icon.textContent = '▶';
+      } else {
+        collapseContent.classList.add('show');
+        icon.textContent = '▼';
+      }
+    }
+    
+    // Update product header when name changes
+    function updateProductHeader(itemId, value) {
+      const header = document.querySelector(`#productItem_${itemId} .product-header`);
+      if (header) {
+        header.textContent = value || 'New Product/Service';
+      }
+    }
+
+    // Add Script Item (with name and response fields)
+    let scriptCounter = 0;
+    function addScriptItem(item = null) {
+      const scriptList = document.getElementById('salesScriptsList');
+      if (!scriptList) return;
+      
+      const itemId = item?.id || `script_${scriptCounter++}`;
+      const scriptName = item?.name || '';
+      const scriptResponse = item?.response || item?.script || '';
+      
+        const scriptItem = document.createElement('div');
+      scriptItem.className = 'script-item border border-gray-300 rounded-lg bg-gray-50 mb-2 overflow-hidden';
+      scriptItem.id = `scriptItem_${itemId}`;
+        scriptItem.innerHTML = `
+        <div class="flex items-center justify-between px-3 py-2 bg-gray-100 border-b border-gray-300">
+          <button type="button" class="script-toggle flex items-center text-left flex-1 text-gray-800 hover:text-blue-600" data-item-id="${itemId}">
+            <span class="collapse-icon mr-2 text-gray-500">▶</span>
+            <strong class="script-header">${escapeHtml(scriptName) || 'New Sales Script'}</strong>
+          </button>
+          <button type="button" class="remove-script text-red-600 hover:text-red-800 text-sm px-2" data-item-id="${itemId}">🗑️ Remove</button>
+        </div>
+        <div class="script-collapse hidden p-3">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Script Name *</label>
+              <input type="text" class="script-name w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                placeholder="e.g., Greeting, Closing, Follow-up" value="${escapeHtml(scriptName)}" data-item-id="${itemId}">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-xs font-medium text-gray-600 mb-1">Response/Description</label>
+              <textarea class="script-response w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                rows="2" placeholder="Script response or description...">${escapeHtml(scriptResponse)}</textarea>
+            </div>
+          </div>
+        </div>
+      `;
+      scriptList.appendChild(scriptItem);
+    }
+    
+    // Toggle script collapse
+    function toggleScriptCollapse(itemId) {
+      const item = document.getElementById(`scriptItem_${itemId}`);
+      if (!item) return;
+      
+      const collapseContent = item.querySelector('.script-collapse');
+      const icon = item.querySelector('.collapse-icon');
+      
+      if (collapseContent.classList.contains('hidden')) {
+        collapseContent.classList.remove('hidden');
+        icon.textContent = '▼';
+      } else {
+        collapseContent.classList.add('hidden');
+        icon.textContent = '▶';
+      }
+    }
+    
+    // Update script header when name changes
+    function updateScriptHeader(itemId, value) {
+      const header = document.querySelector(`#scriptItem_${itemId} .script-header`);
+      if (header) {
+        header.textContent = value || 'New Sales Script';
+      }
+    }
+
+    // Escape HTML
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    // Format object to readable text (key: value format)
+    function formatObjectToText(value) {
+      if (!value) return '';
+      if (typeof value === 'string') return value;
+      if (typeof value === 'object') {
+        // Convert object to readable key: value format
+        return Object.entries(value)
+          .map(([key, val]) => `- ${key}: ${val}`)
+          .join('\n');
+      }
+      return String(value);
+    }
+
+    // Trigger image upload for product
+    let currentImageContainer = null;
+    function triggerImageUpload(container) {
+      currentImageContainer = container;
+      document.getElementById('productImageInput').click();
+    }
+
+    // Handle image upload
+    document.getElementById('productImageInput')?.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file || !currentImageContainer) return;
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        Toast.error('Please select an image file');
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        Toast.error('Image size must be less than 5MB');
+        return;
+      }
+
+      try {
+        // Show loading
+        currentImageContainer.innerHTML = '<span class="product-image-placeholder animate-pulse">⏳</span>';
+
+        // Upload to server
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('fileType', 'image');
+
+        const response = await axios.post('/api/whatsapp/files/upload', formData, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'multipart/form-data'
+          }
+          });
+
+          if (response.data.success) {
+          const imageUrl = response.data.data.url || `/files/${response.data.data.fileId}/preview`;
+          
+          // Update container with image
+          currentImageContainer.innerHTML = `<img src="${imageUrl}" alt="Product">`;
+          
+          // Update hidden input
+          const productItem = currentImageContainer.closest('.product-item');
+          if (productItem) {
+            const hiddenInput = productItem.querySelector('.product-image-url');
+            if (hiddenInput) hiddenInput.value = imageUrl;
+          }
+
+          Toast.success('Image uploaded successfully');
+          }
+        } catch (error) {
+        console.error('Image upload error:', error);
+        currentImageContainer.innerHTML = '<span class="product-image-placeholder">📷</span>';
+        Toast.error('Failed to upload image: ' + (error.response?.data?.error || error.message));
+      }
+
+      // Reset
+      e.target.value = '';
+      currentImageContainer = null;
+    });
+
+    // Tab click handlers
+    if (aiSettingsTab) aiSettingsTab.addEventListener('click', () => switchTab('ai'));
+    if (businessConfigTab) businessConfigTab.addEventListener('click', () => switchTab('business'));
+    if (testingTab) testingTab.addEventListener('click', () => switchTab('testing'));
+
+    // Add Product/Script buttons
+    document.getElementById('addProductBtn')?.addEventListener('click', () => addProductItem());
+    document.getElementById('addScriptBtn')?.addEventListener('click', () => addScriptItem());
+    
+    // Event delegation for product items
+    document.getElementById('productKnowledgeList')?.addEventListener('click', (e) => {
+      const target = e.target;
+      
+      // Toggle collapse
+      if (target.closest('.product-item-toggle')) {
+        const itemId = target.closest('.product-item-toggle').dataset.itemId;
+        toggleProductCollapse(itemId);
+        return;
+      }
+      
+      // Remove item
+      if (target.closest('.remove-product')) {
+        const itemId = target.closest('.remove-product').dataset.itemId;
+        document.getElementById(`productItem_${itemId}`)?.remove();
+        return;
+      }
+      
+      // Image upload trigger
+      if (target.closest('.product-image-container')) {
+        triggerImageUpload(target.closest('.product-image-container'));
+        return;
+      }
+    });
+    
+    // Event delegation for product name input (update header)
+    document.getElementById('productKnowledgeList')?.addEventListener('input', (e) => {
+      if (e.target.classList.contains('product-name')) {
+        const item = e.target.closest('.product-item');
+        if (item) {
+          const header = item.querySelector('.product-header');
+          if (header) {
+            header.textContent = e.target.value || 'New Product/Service';
+          }
+        }
+      }
+    });
+    
+    // Event delegation for script items
+    document.getElementById('salesScriptsList')?.addEventListener('click', (e) => {
+      const target = e.target;
+      
+      // Toggle collapse
+      if (target.closest('.script-toggle')) {
+        const itemId = target.closest('.script-toggle').dataset.itemId;
+        toggleScriptCollapse(itemId);
+        return;
+      }
+      
+      // Remove item
+      if (target.closest('.remove-script')) {
+        const itemId = target.closest('.remove-script').dataset.itemId;
+        document.getElementById(`scriptItem_${itemId}`)?.remove();
+        return;
+      }
+    });
+    
+    // Event delegation for script name input (update header)
+    document.getElementById('salesScriptsList')?.addEventListener('input', (e) => {
+      if (e.target.classList.contains('script-name')) {
+        const itemId = e.target.dataset.itemId;
+        updateScriptHeader(itemId, e.target.value);
+      }
+    });
+
+    // Refresh settings
+    document.getElementById('refreshSettingsBtn')?.addEventListener('click', async () => {
+      const btn = document.getElementById('refreshSettingsBtn');
+      btn.disabled = true;
+      btn.innerHTML = '⏳ Refreshing...';
+      
+      await loadAISettings();
+      
+      btn.disabled = false;
+      btn.innerHTML = '🔄 Refresh';
+      Toast.success('Settings refreshed');
+    });
+
+    // Save AI Settings
+    document.getElementById('aiSettingsForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+      submitBtn.innerHTML = '⏳ Saving...';
+
+        try {
+          const formData = {
+          is_enabled: document.getElementById('enableAI')?.checked || false,
+          auto_reply_enabled: document.getElementById('autoReply')?.checked || false,
+          require_trigger: document.getElementById('requireTrigger')?.checked || false,
+          conversation_memory_enabled: document.getElementById('conversationMemory')?.checked || false,
+          bot_name: document.getElementById('botName')?.value || 'Assistant',
+          language: document.getElementById('primaryLanguage')?.value || 'en',
+          system_prompt: document.getElementById('systemPrompt')?.value || '',
+          trigger_word: document.getElementById('triggerWord')?.value || '',
+          ai_rule: document.getElementById('aiRule')?.value || ''
+          };
+
+          await axios.put(`/api/whatsapp/devices/${accountId}/settings/ai`, formData, {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+          });
+
+          Toast.success('AI settings saved successfully!');
+        } catch (error) {
+          Toast.error('Failed to save: ' + (error.response?.data?.error || error.message));
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalText;
+        }
+      });
+
+    // Save Business Config
+    document.getElementById('businessConfigForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+      submitBtn.innerHTML = '⏳ Saving...';
+
+        try {
+          // Collect product knowledge items
+          const productItems = [];
+          document.querySelectorAll('#productKnowledgeList .product-item').forEach(item => {
+            const name = item.querySelector('.product-name')?.value || '';
+            const desc = item.querySelector('.product-desc')?.value || '';
+          const imageUrl = item.querySelector('.product-image-url')?.value || '';
+            if (name) {
+            productItems.push({ name, description: desc, imageUrl });
+            }
+          });
+
+          // Collect sales script items
+          const scriptItems = [];
+          document.querySelectorAll('#salesScriptsList .script-item').forEach(item => {
+            const name = item.querySelector('.script-name')?.value || '';
+            const response = item.querySelector('.script-response')?.value || '';
+            if (name || response) {
+              scriptItems.push({ name, response });
+            }
+          });
+
+          const formData = {
+          business_type: document.getElementById('businessType')?.value || '',
+          template_language: document.getElementById('templateLanguage')?.value || 'en',
+          product_knowledge: {
+              items: productItems,
+              otherDescription: document.getElementById('productKnowledgeOther')?.value || ''
+            },
+          sales_scripts: {
+              items: scriptItems,
+              detailedResponse: document.getElementById('salesScriptsDetailed')?.value || ''
+            },
+          upsell_strategies: document.getElementById('upsellStrategies')?.value || '',
+          objection_handling: document.getElementById('objectionHandling')?.value || ''
+          };
+
+        await axios.put(`/api/whatsapp/devices/${accountId}/business-config`, formData, {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+          });
+
+          Toast.success('Business configuration saved successfully!');
+        } catch (error) {
+          Toast.error('Failed to save: ' + (error.response?.data?.error || error.message));
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalText;
+        }
+      });
+
+    // Test AI Response
+    document.getElementById('testAIResponseBtn')?.addEventListener('click', async () => {
+      const testMessage = document.getElementById('testMessage')?.value;
+      const btn = document.getElementById('testAIResponseBtn');
+    const testResponse = document.getElementById('testResponse');
+        
+        if (!testMessage?.trim()) {
+          Toast.warning('Please enter a test message');
+          return;
+        }
+
+      btn.disabled = true;
+      btn.innerHTML = '⏳ Testing...';
+
+        try {
+          const response = await axios.post('/api/whatsapp/test-ai', {
+            accountId: accountId,
+            message: testMessage
+          }, {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+          });
+
+          if (response.data.success && testResponse) {
+            testResponse.classList.remove('hidden');
+            document.getElementById('testResponseText').textContent = response.data.data?.response || 'No response received';
+          }
+        } catch (error) {
+          Toast.error('Test failed: ' + (error.response?.data?.error || error.message));
+        } finally {
+        btn.disabled = false;
+        btn.innerHTML = '🔮 Test AI Response';
+      }
+    });
+
+    // Load Business Template
+    document.getElementById('loadBusinessTemplateBtn')?.addEventListener('click', async () => {
+        const businessType = document.getElementById('businessType')?.value;
+        const templateLanguage = document.getElementById('templateLanguage')?.value || 'en';
+      const btn = document.getElementById('loadBusinessTemplateBtn');
+        
+        if (!businessType) {
+          Toast.warning('Please select a business type first');
+          return;
+        }
+
+      btn.disabled = true;
+      btn.innerHTML = '⏳ Loading...';
+          
+        try {
+        const response = await axios.get(`/api/whatsapp/devices/${accountId}/business-templates?type=${businessType}&language=${templateLanguage}`, {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+          });
+
+        // Handle response structure - service returns { success: true, template: {...} } or { success: true, data: { template: {...} } }
+        const template = response.data.data?.template || response.data.template;
+        
+        if (response.data.success && template) {
+          debugLog('Business template loaded:', template);
+          
+          // Clear existing product items and script items
+          const productList = document.getElementById('productKnowledgeList');
+          const scriptList = document.getElementById('salesScriptsList');
+          if (productList) productList.innerHTML = '';
+          if (scriptList) scriptList.innerHTML = '';
+          
+          // Handle productKnowledge - can be string or object
+            if (template.productKnowledge) {
+            const pk = template.productKnowledge;
+            if (typeof pk === 'string') {
+              // If it's a string, put it in the "Other Product Information" field
+              document.getElementById('productKnowledgeOther').value = pk;
+            } else if (typeof pk === 'object') {
+              // If it's an object, check for items array or other structure
+              if (pk.items && Array.isArray(pk.items)) {
+                pk.items.forEach(item => {
+                  addProductItem(item.name || item.title || '', item.description || item.desc || '', item.imageUrl || item.image || '');
+                });
+              }
+              if (pk.otherDescription || pk.other) {
+                document.getElementById('productKnowledgeOther').value = pk.otherDescription || pk.other || '';
+              }
+              // If pk is object but without items, stringify it
+              if (!pk.items && !pk.otherDescription) {
+                document.getElementById('productKnowledgeOther').value = JSON.stringify(pk, null, 2);
+              }
+            }
+          }
+          
+          // Handle salesScripts - can be string or object
+            if (template.salesScripts) {
+            const ss = template.salesScripts;
+            if (typeof ss === 'string') {
+              document.getElementById('salesScriptsDetailed').value = ss;
+            } else if (typeof ss === 'object') {
+              // Clear existing script items first
+              const scriptList = document.getElementById('salesScriptsList');
+              if (scriptList) scriptList.innerHTML = '';
+              
+              if (ss.items && Array.isArray(ss.items)) {
+                ss.items.forEach(item => {
+                  // Pass full item object with name and response
+                  addScriptItem({
+                    id: item.id,
+                    name: item.name || '',
+                    response: item.response || item.script || item.text || item.content || ''
+                  });
+                });
+              }
+              if (ss.detailedResponse || ss.detailed) {
+                document.getElementById('salesScriptsDetailed').value = ss.detailedResponse || ss.detailed || '';
+              }
+              // If ss is object but without items, stringify it
+              if (!ss.items && !ss.detailedResponse) {
+                document.getElementById('salesScriptsDetailed').value = JSON.stringify(ss, null, 2);
+              }
+            }
+          }
+          
+          // Handle upsellStrategies - can be string or object
+          if (template.upsellStrategies) {
+            document.getElementById('upsellStrategies').value = formatObjectToText(template.upsellStrategies);
+          }
+          
+          // Handle objectionHandling - can be string or object
+          if (template.objectionHandling) {
+            document.getElementById('objectionHandling').value = formatObjectToText(template.objectionHandling);
+          }
+          
+          // Also populate other template fields if available
+          if (template.botName) {
+            document.getElementById('botName').value = template.botName;
+          }
+          if (template.prompt) {
+            document.getElementById('systemPrompt').value = template.prompt;
+          }
+          if (template.triggers) {
+            document.getElementById('triggerWord').value = template.triggers;
+          }
+          if (template.businessRules) {
+            document.getElementById('aiRule').value = template.businessRules;
+          }
+          
+            Toast.success('Business template loaded successfully!');
+          } else {
+            Toast.warning('No template found for this business type');
+          }
+        } catch (error) {
+          console.error('Failed to load business template:', error);
+          Toast.error('Failed to load template: ' + (error.response?.data?.error || error.message));
+        } finally {
+        btn.disabled = false;
+        btn.innerHTML = '🔄 Load Business Template';
+      }
+    });
+
+    // Preview Template (placeholder)
+    document.getElementById('previewTemplateBtn')?.addEventListener('click', () => {
+        Toast.info('Template preview feature coming soon');
+    });
+
+    // Load settings on page load
+    <% if (account.status === 'connected') { %>
+    document.addEventListener('DOMContentLoaded', () => {
+      loadAISettings();
+    });
+    <% } %>
+  </script>
+</body>
+</html>

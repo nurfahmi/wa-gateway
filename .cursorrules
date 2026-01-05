@@ -1,0 +1,15 @@
+# Cursor AI Rules for WA-Gateway Project
+
+## File Creation Rules
+
+### Markdown Files
+- **NEVER** create, write, or modify markdown (.md) files unless the user explicitly asks for it
+- This includes README files, documentation files, and any other .md files
+- Only create/modify .md files when the user specifically requests it with clear intent (e.g., "create a README", "update the documentation", "write a markdown file")
+- If suggesting documentation changes, only describe what should be changed without actually modifying the files
+
+### General Guidelines
+- Prefer editing existing files over creating new ones
+- Focus on code implementation rather than documentation unless requested
+- When completing tasks, avoid proactively creating supporting documentation
+

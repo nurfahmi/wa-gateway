@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - WhatsApp Gateway</title>
+  <link rel="stylesheet" href="/css/output.css">
+  <script src="/js/vendor/axios.min.js"></script>
+  <script>
+    axios.defaults.withCredentials = true;
+  </script>
+</head>
+<body class="bg-gray-50">
+  <%- include('../partials/header', { user }) %>
+  <div class="flex">
+    <%- include('../partials/sidebar') %>
+    <main class="flex-1 p-8">
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h2 class="text-3xl font-bold text-gray-900 mb-2">WhatsApp Devices</h2>
+          <p class="text-gray-600">Manage your connected WhatsApp devices</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <% if (typeof productPageUrl !== 'undefined' && productPageUrl) { %>
+          <a href="<%= productPageUrl %>" target="_blank" rel="noopener noreferrer" 
+             class="group relative inline-flex items-center overflow-hidden rounded-lg bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 p-[2px] transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/30 hover:scale-105">
+            <span class="relative inline-flex items-center gap-2 rounded-[6px] bg-white px-4 py-2 text-sm font-semibold transition-all duration-300 group-hover:bg-opacity-0">
+              <span class="relative">
+                <svg class="w-5 h-5 text-emerald-600 group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                <span class="absolute -top-1 -right-1 flex h-2 w-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                </span>
+              </span>
+              <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600 group-hover:text-white transition-all duration-300">Get More Devices</span>
+              <svg class="w-4 h-4 text-emerald-600 group-hover:text-white group-hover:translate-x-0.5 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </span>
+          </a>
+          <% } %>
+          <button id="connectNewDeviceBtn" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-lg shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-150">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Connect New Device
+          </button>
+        </div>
+      </div>
+      
+      <!-- Account Limit Info -->
+      <div class="<%= accounts.length >= workspace.device_limit ? 'bg-amber-50 border-amber-200' : 'bg-blue-50 border-blue-200' %> border rounded-lg p-4 mb-6">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <% if (accounts.length >= workspace.device_limit) { %>
+            <svg class="w-5 h-5 text-amber-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <% } else { %>
+            <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <% } %>
+            <p class="text-sm <%= accounts.length >= workspace.device_limit ? 'text-amber-900' : 'text-blue-900' %>">
+              <span class="font-semibold">Devices:</span> <%= accounts.length %> / <%= workspace.device_limit %>
+              <span class="<%= accounts.length >= workspace.device_limit ? 'text-amber-700' : 'text-blue-700' %> ml-2">(Subscription: <%= workspace.subscription_tier.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) %>)</span>
+              <% if (accounts.length >= workspace.device_limit) { %>
+              <span class="text-amber-800 font-medium ml-2">— Device limit reached!</span>
+              <% } %>
+            </p>
+          </div>
+          <% if (typeof productPageUrl !== 'undefined' && productPageUrl && accounts.length >= workspace.device_limit - 1) { %>
+          <a href="<%= productPageUrl %>" target="_blank" rel="noopener noreferrer" 
+             class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full shadow-sm hover:shadow-md hover:from-emerald-600 hover:to-teal-600 transition-all duration-200 animate-pulse hover:animate-none">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+            Upgrade Now
+          </a>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Accounts Grid -->
+      <% if (accounts.length === 0) { %>
+        <div class="card">
+          <div class="text-center py-16">
+            <div class="mb-4">
+              <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">No Connected Devices</h3>
+            <p class="text-gray-600 mb-6">Get started by connecting your first WhatsApp device.</p>
+            <button id="connectDeviceEmptyBtn" class="btn btn-primary">
+              <svg class="w-5 h-5 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              Connect Device
+            </button>
+          </div>
+        </div>
+      <% } else { %>
+        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          <% accounts.forEach(account => { %>
+            <div class="card hover:shadow-lg transition-shadow duration-200 <%= account.status === 'connected' ? 'border-l-4 border-l-green-500' : account.status === 'connecting' ? 'border-l-4 border-l-yellow-500' : 'border-l-4 border-l-gray-300' %>"
+                 data-account-id="<%= account.id %>"
+                 data-account-status="<%= account.status %>">
+              <!-- Account Header -->
+              <div class="flex items-start justify-between mb-4">
+                <div class="flex items-center space-x-3">
+                  <div class="flex-shrink-0">
+                    <div class="w-12 h-12 rounded-full <%= account.status === 'connected' ? 'bg-green-100' : account.status === 'connecting' ? 'bg-yellow-100' : 'bg-gray-100' %> flex items-center justify-center">
+                      <% if (account.status === 'connected') { %>
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      <% } else if (account.status === 'connecting') { %>
+                        <svg class="w-6 h-6 text-yellow-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      <% } else { %>
+                        <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3" />
+                        </svg>
+                      <% } %>
+                    </div>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <h3 class="text-lg font-semibold text-gray-900 truncate">
+                      <%= account.display_name || 'WhatsApp Device' %>
+                    </h3>
+                    <% if (account.phone_number) { %>
+                      <p class="text-sm text-gray-600 font-medium mt-0.5">
+                        <%= account.phone_number %>
+                      </p>
+                    <% } %>
+                  </div>
+                </div>
+                <% if (account.status === 'connected') { %>
+                  <span data-status-badge class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500 text-white">
+                    Active
+                  </span>
+                <% } else if (account.status === 'connecting') { %>
+                  <span data-status-badge class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-500 text-white">
+                    Pending
+                  </span>
+                <% } else if (account.status === 'disconnected') { %>
+                  <span data-status-badge class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-600 text-white">
+                    Offline
+                  </span>
+                <% } else { %>
+                  <span data-status-badge class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-600 text-white">
+                    <%= account.status %>
+                  </span>
+                <% } %>
+              </div>
+
+              <!-- Account Details -->
+              <div class="space-y-3 mb-4 pb-4 border-b border-gray-200">
+                <% if (account.deviceApiKey && account.deviceApiKey.length === 64 && /^[a-f0-9]+$/.test(account.deviceApiKey)) { %>
+                  <div>
+                    <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">Device API Key</label>
+                    <div class="mt-1 flex items-start space-x-2">
+                      <div class="flex-1 bg-gray-50 px-3 py-2 rounded border border-gray-200 overflow-hidden">
+                        <code class="text-xs font-mono text-gray-800 break-all" id="deviceKey_<%= account.id %>">
+                          <%= account.deviceApiKey %>
+                        </code>
+                      </div>
+                      <button data-action="copyDeviceKey" 
+                              data-account-id="<%= account.id %>" 
+                              data-device-key="<%= account.deviceApiKey %>"
+                              class="flex-shrink-0 p-2 text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded transition-colors"
+                              title="Copy API Key">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                      </button>
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">Use this key for API requests</p>
+                  </div>
+                <% } %>
+                
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">Created</label>
+                    <p class="mt-1 text-sm text-gray-900"><%= new Date(account.created_at).toLocaleDateString() %></p>
+                  </div>
+                  <% if (account.last_connected_at) { %>
+                    <div>
+                      <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">Last Active</label>
+                      <p class="mt-1 text-sm text-gray-900"><%= new Date(account.last_connected_at).toLocaleDateString() %></p>
+                    </div>
+                  <% } %>
+                </div>
+              </div>
+
+              <!-- Account Actions -->
+              <div class="flex flex-wrap gap-2">
+                <% if (account.status === 'connecting') { %>
+                  <button data-action="viewQR" data-account-id="<%= account.id %>"
+                          class="inline-flex items-center px-3 py-2 bg-blue-600 text-white shadow-sm text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                    </svg>
+                    View QR
+                  </button>
+                <% } else if (account.status === 'disconnected') { %>
+                  <button data-action="reconnect" data-account-id="<%= account.id %>"
+                          class="inline-flex items-center px-3 py-2 bg-primary-600 text-white shadow-sm text-sm font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Reconnect
+                  </button>
+                <% } %>
+
+                <% if (account.status === 'connected') { %>
+                  <a href="/accounts/<%= account.id %>/settings"
+                     class="inline-flex items-center px-3 py-2 bg-primary-600 text-white shadow-sm text-sm font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    AI Settings
+                  </a>
+
+                  <button data-action="checkStatus" data-account-id="<%= account.id %>"
+                          class="inline-flex items-center px-3 py-2 bg-gray-600 text-white shadow-sm text-sm font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Check Status
+                  </button>
+
+                  <button data-action="deviceOp" data-op="logout" data-account-id="<%= account.id %>"
+                          class="inline-flex items-center px-3 py-2 bg-red-600 text-white shadow-sm text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Logout Device
+                  </button>
+
+                  <button data-action="deviceOp" data-op="reconnect" data-account-id="<%= account.id %>"
+                          class="inline-flex items-center px-3 py-2 bg-primary-600 text-white shadow-sm text-sm font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Reconnect
+                  </button>
+
+                  <button data-action="webhookSettings" data-account-id="<%= account.id %>"
+                          class="inline-flex items-center px-3 py-2 bg-orange-600 text-white shadow-sm text-sm font-medium rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
+                    Webhooks
+                  </button>
+                <% } %>
+
+                <!-- Common Actions -->
+                <% if (account.status !== 'connected') { %>
+                <button data-action="checkStatus" data-account-id="<%= account.id %>"
+                        class="inline-flex items-center px-3 py-2 bg-gray-600 text-white shadow-sm text-sm font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
+                  <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Check Status
+                </button>
+                <% } %>
+
+                <button data-action="deleteAccount" data-account-id="<%= account.id %>"
+                        class="inline-flex items-center px-3 py-2 bg-red-600 text-white shadow-sm text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
+                  <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Delete
+                </button>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+
+      <!-- QR Modal -->
+      <div id="qrModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full">
+          <div class="flex items-center justify-between p-6 border-b border-gray-200">
+            <div class="flex items-center space-x-3">
+              <div class="flex-shrink-0">
+                <svg class="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-gray-900">Scan QR Code</h3>
+                <p class="text-sm text-gray-500">Open WhatsApp on your phone</p>
+              </div>
+            </div>
+            <button id="closeQRModalBtn" class="text-gray-400 hover:text-gray-600 transition-colors">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          
+          <div class="p-6">
+            <div class="bg-gray-50 rounded-lg p-4 mb-4">
+              <img id="qrModalImage" src="" alt="QR Code" class="w-full rounded-lg">
+            </div>
+            
+            <div class="space-y-2 mb-4">
+              <div class="flex items-start space-x-3">
+                <span class="flex-shrink-0 w-6 h-6 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                <p class="text-sm text-gray-700">Open WhatsApp on your phone</p>
+              </div>
+              <div class="flex items-start space-x-3">
+                <span class="flex-shrink-0 w-6 h-6 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                <p class="text-sm text-gray-700">Tap Menu or Settings and select <strong>Linked Devices</strong></p>
+              </div>
+              <div class="flex items-start space-x-3">
+                <span class="flex-shrink-0 w-6 h-6 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                <p class="text-sm text-gray-700">Point your phone at this screen to scan the QR code</p>
+              </div>
+            </div>
+
+            <div class="bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <p class="text-xs text-amber-800">
+                <strong>Note:</strong> QR code expires in 60 seconds. Refresh if needed.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Webhook Settings Modal -->
+      <div id="webhookModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full">
+          <div class="flex items-center justify-between p-6 border-b border-gray-200">
+            <div class="flex items-center space-x-3">
+              <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              </svg>
+              <div>
+                <h3 class="text-xl font-bold text-gray-900">Webhook Settings</h3>
+                <p class="text-sm text-gray-500">Configure notifications</p>
+              </div>
+            </div>
+            <button id="closeWebhookModal" class="text-gray-400 hover:text-gray-600 transition-colors">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div class="p-6">
+            <form id="webhookForm" class="space-y-4">
+              <input type="hidden" id="webhookAccountId" value="">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Webhook URL</label>
+                <input type="url" id="webhookUrl" name="webhookUrl" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                       placeholder="https://your-app.com/webhook">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Events</label>
+                <div class="space-y-2">
+                  <label class="flex items-center">
+                    <input type="checkbox" name="webhookEvents" value="message" class="mr-2 text-orange-600 focus:ring-orange-500">
+                    <span class="text-sm">Messages (incoming & outgoing)</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input type="checkbox" name="webhookEvents" value="connection" class="mr-2 text-orange-600 focus:ring-orange-500">
+                    <span class="text-sm">Connection status changes</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input type="checkbox" name="webhookEvents" value="qr" class="mr-2 text-orange-600 focus:ring-orange-500">
+                    <span class="text-sm">QR code generated</span>
+                  </label>
+                </div>
+              </div>
+              <div class="flex space-x-3 pt-2">
+                <button type="submit" class="flex-1 px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
+                  Save Settings
+                </button>
+                <button type="button" id="testWebhookBtn" class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50">
+                  Test
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const statusPollIntervals = {};
+    const qrPollIntervals = {};
+    let currentModalAccountId = null;
+    const accessToken = '<%= (typeof accessToken !== "undefined") ? accessToken : "" %>';
+
+    function stopStatusPolling(accountId) {
+      if (statusPollIntervals[accountId]) {
+        clearInterval(statusPollIntervals[accountId]);
+        delete statusPollIntervals[accountId];
+      }
+    }
+
+    function stopQRPolling(accountId) {
+      if (qrPollIntervals[accountId]) {
+        clearInterval(qrPollIntervals[accountId]);
+        delete qrPollIntervals[accountId];
+      }
+    }
+
+    function startQRPolling(accountId) {
+      stopQRPolling(accountId);
+      qrPollIntervals[accountId] = setInterval(async () => {
+        if (document.hidden) return;
+        try {
+          const response = await axios.get(`/api/whatsapp/devices/${accountId}/qr`, {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+          });
+          if (response.data.success && response.data.data.qrCode) {
+            document.getElementById('qrModalImage').src = response.data.data.qrCode;
+          }
+        } catch (error) {
+          console.error('QR poll error:', error);
+        }
+      }, 5000);
+    }
+
+    function startAutoStatusPolling() {
+      document.querySelectorAll('[data-account-status="connecting"]').forEach(card => {
+        const accountId = card.dataset.accountId;
+        if (statusPollIntervals[accountId] || currentModalAccountId === accountId) return;
+        
+        statusPollIntervals[accountId] = setInterval(async () => {
+          if (document.hidden) return;
+          try {
+            const response = await axios.get(`/api/whatsapp/devices/${accountId}/status`, {
+              headers: { 'Authorization': `Bearer ${accessToken}` }
+            });
+            if (response.data.data.status !== 'connecting') {
+              stopStatusPolling(accountId);
+              location.reload();
+            }
+          } catch (error) {
+            stopStatusPolling(accountId);
+          }
+        }, 10000);
+      });
+    }
+
+    startAutoStatusPolling();
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) startAutoStatusPolling();
+    });
+
+    window.addEventListener('beforeunload', () => {
+      Object.values(statusPollIntervals).forEach(i => clearInterval(i));
+      Object.values(qrPollIntervals).forEach(i => clearInterval(i));
+    });
+
+    // Event delegation
+    document.addEventListener('click', async (e) => {
+      const actionBtn = e.target.closest('[data-action]');
+      if (!actionBtn) return;
+
+      const action = actionBtn.dataset.action;
+      const accountId = actionBtn.dataset.accountId;
+
+      switch (action) {
+        case 'viewQR':
+          await showQRModal(accountId);
+          break;
+        case 'reconnect':
+          await reconnectDevice(accountId);
+          break;
+        case 'checkStatus':
+          await checkStatus(accountId);
+          break;
+        case 'deleteAccount':
+          await deleteAccount(accountId);
+          break;
+        case 'copyDeviceKey':
+          copyToClipboard(actionBtn.dataset.deviceKey, 'API Key copied!');
+          break;
+        case 'webhookSettings':
+          await showWebhookModal(accountId);
+          break;
+        case 'deviceOp':
+          await executeDeviceOp(actionBtn.dataset.op, accountId);
+          break;
+      }
+    });
+
+    async function showQRModal(accountId) {
+      currentModalAccountId = accountId;
+      try {
+        const response = await axios.get(`/api/whatsapp/devices/${accountId}/qr`, {
+          headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        if (response.data.success && response.data.data.qrCode) {
+          document.getElementById('qrModalImage').src = response.data.data.qrCode;
+          document.getElementById('qrModal').classList.remove('hidden');
+          startQRPolling(accountId);
+        }
+      } catch (error) {
+        Toast.error('Failed to load QR code');
+      }
+    }
+
+    function closeQRModal() {
+      document.getElementById('qrModal').classList.add('hidden');
+      if (currentModalAccountId) {
+        stopQRPolling(currentModalAccountId);
+        currentModalAccountId = null;
+      }
+    }
+
+    document.getElementById('closeQRModalBtn')?.addEventListener('click', closeQRModal);
+    document.getElementById('qrModal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'qrModal') closeQRModal();
+    });
+
+    async function executeDeviceOp(op, accountId) {
+      if (op === 'logout') {
+        if (!await Modal.confirm('Are you sure you want to logout this device? This will disconnect and remove the session.')) {
+          return;
+        }
+      } else if (op === 'reconnect') {
+        if (!await Modal.confirm('Reconnect this device? A new QR code will be generated.')) {
+          return;
+        }
+      }
+
+      try {
+        switch (op) {
+          case 'logout':
+            await axios.post(`/api/whatsapp/devices/${accountId}/logout`, {}, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+            Toast.success('Device logged out');
+            setTimeout(() => location.reload(), 1500);
+            break;
+          case 'reconnect':
+            await axios.post(`/api/whatsapp/devices/${accountId}/reconnect`, {}, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+            Toast.success('Reconnection initiated');
+            setTimeout(() => location.reload(), 1500);
+            break;
+        }
+      } catch (error) {
+        Toast.error('Operation failed: ' + (error.response?.data?.error || error.message));
+      }
+    }
+
+    // Webhook Modal
+    async function showWebhookModal(accountId) {
+      const modal = document.getElementById('webhookModal');
+      document.getElementById('webhookAccountId').value = accountId;
+      
+      try {
+        const response = await axios.get(`/api/whatsapp/devices/${accountId}/settings/webhook`, {
+          headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        const settings = response.data.data || {};
+        
+        document.getElementById('webhookUrl').value = settings.webhookUrl || '';
+        document.querySelectorAll('input[name="webhookEvents"]').forEach(cb => {
+          cb.checked = settings.webhookEvents?.includes(cb.value) || false;
+        });
+      } catch (error) {
+        console.error('Failed to load webhook settings:', error);
+      }
+      
+      modal.classList.remove('hidden');
+    }
+
+    document.getElementById('closeWebhookModal')?.addEventListener('click', () => {
+      document.getElementById('webhookModal').classList.add('hidden');
+    });
+    document.getElementById('webhookModal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'webhookModal') document.getElementById('webhookModal').classList.add('hidden');
+    });
+
+    document.getElementById('webhookForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const accountId = document.getElementById('webhookAccountId').value;
+      const webhookUrl = document.getElementById('webhookUrl').value;
+      const events = Array.from(document.querySelectorAll('input[name="webhookEvents"]:checked')).map(cb => cb.value);
+
+      try {
+        await axios.put(`/api/whatsapp/devices/${accountId}/settings/webhook`, {
+          webhookUrl,
+          webhookEvents: events
+        }, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+        
+        Toast.success('Webhook settings saved');
+        document.getElementById('webhookModal').classList.add('hidden');
+      } catch (error) {
+        Toast.error('Failed to save: ' + (error.response?.data?.error || error.message));
+      }
+    });
+
+    document.getElementById('testWebhookBtn')?.addEventListener('click', async () => {
+      const webhookUrl = document.getElementById('webhookUrl').value;
+      if (!webhookUrl) {
+        Toast.warning('Please enter a webhook URL first');
+        return;
+      }
+      Toast.info('Test webhook feature coming soon');
+    });
+
+    async function reconnectDevice(accountId) {
+      if (!confirm('Reconnect this device? A new QR code will be generated.')) return;
+      try {
+        await axios.post(`/api/whatsapp/devices/${accountId}/reconnect`, {}, {
+          headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        Toast.success('Reconnecting device...');
+        setTimeout(() => location.reload(), 1500);
+      } catch (error) {
+        Toast.error('Failed to reconnect: ' + (error.response?.data?.error || error.message));
+      }
+    }
+
+    async function checkStatus(accountId) {
+      try {
+        const response = await axios.get(`/api/whatsapp/devices/${accountId}/status`, {
+          headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        Toast.success(`Status: ${response.data.data.status}`);
+      } catch (error) {
+        Toast.error('Failed to check status');
+      }
+    }
+
+    async function deleteAccount(accountId) {
+      if (!confirm('Are you sure you want to delete this device? This action cannot be undone.')) return;
+      try {
+        await axios.delete(`/api/whatsapp/devices/${accountId}`, {
+          headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        Toast.success('Device deleted');
+        location.reload();
+      } catch (error) {
+        Toast.error('Failed to delete: ' + (error.response?.data?.error || error.message));
+      }
+    }
+
+    function copyToClipboard(text, message) {
+      navigator.clipboard.writeText(text).then(() => {
+        Toast.success(message || 'Copied!');
+      }).catch(() => {
+        Toast.error('Failed to copy');
+      });
+    }
+
+    // Device limit check
+    const deviceCount = <%= accounts.length %>;
+    const deviceLimit = <%= workspace.device_limit %>;
+    const productPageUrl = '<%= typeof productPageUrl !== "undefined" && productPageUrl ? productPageUrl : "" %>';
+
+    function handleConnectDevice() {
+      if (deviceCount >= deviceLimit) {
+        // Show device limit modal
+        document.getElementById('deviceLimitModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      } else {
+        // Navigate to connect page
+        window.location.href = '/accounts/connect';
+      }
+    }
+
+    function closeDeviceLimitModal() {
+      document.getElementById('deviceLimitModal').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('connectNewDeviceBtn')?.addEventListener('click', handleConnectDevice);
+    document.getElementById('connectDeviceEmptyBtn')?.addEventListener('click', handleConnectDevice);
+    document.getElementById('closeLimitModalBtn')?.addEventListener('click', closeDeviceLimitModal);
+
+    // Close modal on backdrop click
+    document.getElementById('deviceLimitModal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'deviceLimitModal') {
+        closeDeviceLimitModal();
+      }
+    });
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !document.getElementById('deviceLimitModal').classList.contains('hidden')) {
+        closeDeviceLimitModal();
+      }
+    });
+
+    // Auto-show modal if redirected with limit_reached parameter
+    (function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('limit_reached') === 'true') {
+        document.getElementById('deviceLimitModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    })();
+  </script>
+
+  <!-- Device Limit Exceeded Modal -->
+  <div id="deviceLimitModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all duration-300 animate-[scaleIn_0.2s_ease-out]">
+      <!-- Modal Header with Icon -->
+      <div class="relative pt-8 pb-4 px-6 text-center">
+        <!-- Warning Icon with Pulse Effect -->
+        <div class="mx-auto w-20 h-20 relative mb-4">
+          <div class="absolute inset-0 bg-amber-100 rounded-full animate-ping opacity-30"></div>
+          <div class="relative flex items-center justify-center w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full shadow-lg">
+            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+        </div>
+        
+        <h3 class="text-2xl font-bold text-gray-900 mb-2">Device Limit Reached</h3>
+        <p class="text-gray-600 leading-relaxed">
+          You've reached your maximum of <span class="font-semibold text-amber-600"><%= workspace.device_limit %> device<%= workspace.device_limit > 1 ? 's' : '' %></span> on your current plan.
+        </p>
+      </div>
+      
+      <!-- Modal Body -->
+      <div class="px-6 pb-6">
+        <div class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 mb-6">
+          <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p class="text-sm text-amber-800">
+              To connect more WhatsApp devices, please upgrade your subscription or purchase additional device slots.
+            </p>
+          </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="flex flex-col gap-3">
+          <% if (typeof productPageUrl !== 'undefined' && productPageUrl) { %>
+          <a href="<%= productPageUrl %>" target="_blank" rel="noopener noreferrer" 
+             class="group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 p-[2px] transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/30 hover:scale-[1.02]">
+            <span class="relative flex items-center justify-center gap-2 rounded-[10px] bg-white px-6 py-3 font-semibold transition-all duration-300 group-hover:bg-opacity-0">
+              <span class="relative">
+                <svg class="w-5 h-5 text-emerald-600 group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                <span class="absolute -top-1 -right-1 flex h-2 w-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                </span>
+              </span>
+              <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600 group-hover:text-white transition-all duration-300">Get More Devices</span>
+              <svg class="w-4 h-4 text-emerald-600 group-hover:text-white group-hover:translate-x-1 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </span>
+          </a>
+          <% } %>
+          <button id="closeLimitModalBtn" 
+                  class="w-full px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-all duration-200">
+            OK, Got it
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+  </style>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>
