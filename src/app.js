@@ -162,6 +162,23 @@ app.use('/auth', webAuthRoutes);
 app.use('/auth', webAuthDebugRoutes); // Debug endpoint at /auth/debug
 app.use('/', webDashboardRoutes);
 
+// Explicit static file handlers before 404 (in case express.static fails)
+app.get('/css/:file', (req, res, next) => {
+  const filePath = path.join(__dirname, '../public/css', req.params.file);
+  res.type('text/css');
+  res.sendFile(filePath, (err) => {
+    if (err) next();
+  });
+});
+
+app.get('/js/*', (req, res, next) => {
+  const filePath = path.join(__dirname, '../public', req.path);
+  res.type('application/javascript');
+  res.sendFile(filePath, (err) => {
+    if (err) next();
+  });
+});
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: 'Not found' });

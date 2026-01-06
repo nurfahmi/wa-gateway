@@ -38,7 +38,6 @@ sessions/
 # Build
 dist/
 build/
-public/css/output.css
 
 # Testing
 coverage/
