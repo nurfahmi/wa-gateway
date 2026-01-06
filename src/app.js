@@ -25,9 +25,9 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://static.cloudflareinsights.com"],
       imgSrc: ["'self'", "data:", "https:", baileysBaseUrl], // Allow images from Baileys service
-      connectSrc: ["'self'", baileysBaseUrl] // Allow connections to Baileys service for file uploads
+      connectSrc: ["'self'", baileysBaseUrl, "https://cloudflareinsights.com"] // Allow connections to Baileys service for file uploads
     }
   }
 }));
@@ -93,8 +93,18 @@ app.set('views', path.join(__dirname, 'views'));
 // Global template variables
 app.locals.productPageUrl = config.productPage?.url || null;
 
-// Static files
-app.use(express.static(path.join(__dirname, '../public')));
+// Static files with explicit MIME types
+app.use(express.static(path.join(__dirname, '../public'), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+    } else if (filePath.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript');
+    } else if (filePath.endsWith('.ico')) {
+      res.setHeader('Content-Type', 'image/x-icon');
+    }
+  }
+}));
 
 // Request logging
 app.use((req, res, next) => {
@@ -103,6 +113,11 @@ app.use((req, res, next) => {
     userAgent: req.get('user-agent')
   });
   next();
+});
+
+// Favicon fallback (browsers request /favicon.ico by default)
+app.get('/favicon.ico', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/images/favicon.ico'));
 });
 
 // Health check endpoint
