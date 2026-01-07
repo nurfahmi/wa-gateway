@@ -8,17 +8,24 @@ const logger = require('../../utils/logger');
 const crypto = require('../../utils/crypto');
 const authRateLimiter = require('../../middlewares/authRateLimiter');
 
-// Rate limiting for auth routes (stricter than API routes)
-// 5 attempts per 15 minutes per IP
-const rateLimit = authRateLimiter({
+// Rate limiting for login route (stricter to prevent brute force)
+// 10 attempts per 15 minutes per IP
+const loginRateLimit = authRateLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  maxRequests: 5 // 5 attempts per 15 minutes
+  maxRequests: 10 // 10 attempts per 15 minutes
+});
+
+// Rate limiting for callback route (more generous since it comes from OAuth provider)
+// 30 attempts per 15 minutes per IP
+const callbackRateLimit = authRateLimiter({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  maxRequests: 30 // 30 attempts per 15 minutes (more generous for OAuth callbacks)
 });
 
 /**
  * Initiate OAuth login
  */
-router.get('/login', rateLimit, (req, res) => {
+router.get('/login', loginRateLimit, (req, res) => {
   try {
     // Validate OAuth configuration
     if (!config.oauth.serverUrl || !config.oauth.clientId || !config.oauth.redirectUri) {
@@ -51,7 +58,7 @@ router.get('/login', rateLimit, (req, res) => {
 /**
  * OAuth callback handler
  */
-router.get('/callback', rateLimit, async (req, res) => {
+router.get('/callback', callbackRateLimit, async (req, res) => {
   const { code, state, error } = req.query;
 
   logger.info('📥 OAuth callback received', {
