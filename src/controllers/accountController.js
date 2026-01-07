@@ -513,97 +513,66 @@ class AccountController {
       const baileysServiceUrl = config.baileys.serviceUrl || 'http://localhost:3000/api/whatsapp';
       const baileysApiKey = config.baileys.serviceApiKey || '';
       
-      // Try multiple endpoints in order of preference
-      const endpoints = [
-        `${baileysServiceUrl}/files/${fileId}/download`,  // Download endpoint (binary)
-        `${baileysServiceUrl}/files/${fileId}/content`,   // Content endpoint
-        `${baileysServiceUrl}/files/${fileId}/stream`,    // Stream endpoint
-      ];
+      // Baileys service returns binary at /preview endpoint
+      const previewUrl = `${baileysServiceUrl}/files/${fileId}/preview`;
       
-      let lastError = null;
+      logger.debug(`Proxying file preview from: ${previewUrl}`);
       
-      for (const downloadUrl of endpoints) {
-        try {
-          logger.debug(`Trying file download from: ${downloadUrl}`);
-          
-          const response = await axios.get(downloadUrl, {
-            headers: {
-              'X-API-Token': baileysApiKey,
-              'Accept': 'image/*,*/*'
-            },
-            responseType: 'stream',
-            timeout: 30000,
-            validateStatus: (status) => status < 500 // Accept 4xx to handle them
-          });
-          
-          // Check if we got actual binary content (not JSON)
-          const contentType = response.headers['content-type'] || '';
-          
-          if (response.status === 200 && !contentType.includes('application/json')) {
-            // Success - got binary content
-            res.setHeader('Content-Type', contentType || 'image/jpeg');
-            res.setHeader('Cache-Control', 'public, max-age=31536000');
-            res.setHeader('Access-Control-Allow-Origin', '*');
-            
-            if (response.headers['content-length']) {
-              res.setHeader('Content-Length', response.headers['content-length']);
-            }
-            
-            response.data.pipe(res);
-            return;
-          }
-        } catch (err) {
-          lastError = err;
-          logger.debug(`Endpoint ${downloadUrl} failed: ${err.message}`);
-        }
-      }
-      
-      // If all stream endpoints failed, try to get file info and redirect
-      try {
-        const infoUrl = `${baileysServiceUrl}/files/${fileId}`;
-        const infoResponse = await axios.get(infoUrl, {
-          headers: { 'X-API-Token': baileysApiKey },
-          timeout: 10000
-        });
-        
-        const fileInfo = infoResponse.data?.file || infoResponse.data?.data || infoResponse.data;
-        
-        // If file has a direct URL, redirect to it
-        if (fileInfo?.url || fileInfo?.downloadUrl || fileInfo?.previewUrl) {
-          const directUrl = fileInfo.url || fileInfo.downloadUrl || fileInfo.previewUrl;
-          logger.debug(`Redirecting to direct URL: ${directUrl}`);
-          return res.redirect(directUrl);
-        }
-        
-        // If file has base64 data, serve it
-        if (fileInfo?.data || fileInfo?.base64) {
-          const base64Data = fileInfo.data || fileInfo.base64;
-          const mimeType = fileInfo.mimeType || fileInfo.mimetype || 'image/jpeg';
-          const buffer = Buffer.from(base64Data, 'base64');
-          
-          res.setHeader('Content-Type', mimeType);
-          res.setHeader('Content-Length', buffer.length);
-          res.setHeader('Cache-Control', 'public, max-age=31536000');
-          return res.send(buffer);
-        }
-      } catch (infoErr) {
-        logger.debug(`File info request failed: ${infoErr.message}`);
-      }
-      
-      // All attempts failed
-      logger.error('Get file preview - all endpoints failed:', {
-        fileId,
-        lastError: lastError?.message
+      const response = await axios({
+        method: 'get',
+        url: previewUrl,
+        headers: {
+          'X-API-Token': baileysApiKey
+        },
+        responseType: 'arraybuffer', // Get raw binary data
+        timeout: 30000
       });
       
-      res.status(404).send('Image not found');
+      // Determine content type from response or guess from file signature
+      let contentType = response.headers['content-type'];
+      
+      // Check for common image signatures if content-type is wrong
+      const data = Buffer.from(response.data);
+      if (data.length > 4) {
+        // PNG signature: 89 50 4E 47
+        if (data[0] === 0x89 && data[1] === 0x50 && data[2] === 0x4E && data[3] === 0x47) {
+          contentType = 'image/png';
+        }
+        // JPEG signature: FF D8 FF
+        else if (data[0] === 0xFF && data[1] === 0xD8 && data[2] === 0xFF) {
+          contentType = 'image/jpeg';
+        }
+        // GIF signature: 47 49 46 38
+        else if (data[0] === 0x47 && data[1] === 0x49 && data[2] === 0x46 && data[3] === 0x38) {
+          contentType = 'image/gif';
+        }
+        // WebP signature: 52 49 46 46 ... 57 45 42 50
+        else if (data[0] === 0x52 && data[1] === 0x49 && data[2] === 0x46 && data[3] === 0x46) {
+          contentType = 'image/webp';
+        }
+      }
+      
+      // Set response headers
+      res.setHeader('Content-Type', contentType || 'application/octet-stream');
+      res.setHeader('Content-Length', data.length);
+      res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      
+      // Send the binary data
+      res.send(data);
     } catch (error) {
       logger.error('Get file preview error:', {
         fileId: req.params?.fileId,
         message: error.message,
-        status: error.response?.status
+        status: error.response?.status,
+        url: `${require('../config').baileys.serviceUrl}/files/${req.params?.fileId}/preview`
       });
-      res.status(error.response?.status || 500).send('Failed to load image');
+      
+      if (error.response?.status === 404) {
+        res.status(404).send('Image not found');
+      } else {
+        res.status(error.response?.status || 500).send('Failed to load image');
+      }
     }
   }
 
