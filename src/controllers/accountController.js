@@ -510,44 +510,100 @@ class AccountController {
       const config = require('../config');
       const axios = require('axios');
       
-      // Get preview from Baileys service
       const baileysServiceUrl = config.baileys.serviceUrl || 'http://localhost:3000/api/whatsapp';
       const baileysApiKey = config.baileys.serviceApiKey || '';
       
-      const previewUrl = `${baileysServiceUrl}/files/${fileId}/preview`;
+      // Try multiple endpoints in order of preference
+      const endpoints = [
+        `${baileysServiceUrl}/files/${fileId}/download`,  // Download endpoint (binary)
+        `${baileysServiceUrl}/files/${fileId}/content`,   // Content endpoint
+        `${baileysServiceUrl}/files/${fileId}/stream`,    // Stream endpoint
+      ];
       
-      logger.debug(`Fetching file preview from: ${previewUrl}`);
+      let lastError = null;
       
-      const response = await axios.get(previewUrl, {
-        headers: {
-          'X-API-Token': baileysApiKey
-        },
-        responseType: 'stream',
-        timeout: 30000 // 30 second timeout
+      for (const downloadUrl of endpoints) {
+        try {
+          logger.debug(`Trying file download from: ${downloadUrl}`);
+          
+          const response = await axios.get(downloadUrl, {
+            headers: {
+              'X-API-Token': baileysApiKey,
+              'Accept': 'image/*,*/*'
+            },
+            responseType: 'stream',
+            timeout: 30000,
+            validateStatus: (status) => status < 500 // Accept 4xx to handle them
+          });
+          
+          // Check if we got actual binary content (not JSON)
+          const contentType = response.headers['content-type'] || '';
+          
+          if (response.status === 200 && !contentType.includes('application/json')) {
+            // Success - got binary content
+            res.setHeader('Content-Type', contentType || 'image/jpeg');
+            res.setHeader('Cache-Control', 'public, max-age=31536000');
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            
+            if (response.headers['content-length']) {
+              res.setHeader('Content-Length', response.headers['content-length']);
+            }
+            
+            response.data.pipe(res);
+            return;
+          }
+        } catch (err) {
+          lastError = err;
+          logger.debug(`Endpoint ${downloadUrl} failed: ${err.message}`);
+        }
+      }
+      
+      // If all stream endpoints failed, try to get file info and redirect
+      try {
+        const infoUrl = `${baileysServiceUrl}/files/${fileId}`;
+        const infoResponse = await axios.get(infoUrl, {
+          headers: { 'X-API-Token': baileysApiKey },
+          timeout: 10000
+        });
+        
+        const fileInfo = infoResponse.data?.file || infoResponse.data?.data || infoResponse.data;
+        
+        // If file has a direct URL, redirect to it
+        if (fileInfo?.url || fileInfo?.downloadUrl || fileInfo?.previewUrl) {
+          const directUrl = fileInfo.url || fileInfo.downloadUrl || fileInfo.previewUrl;
+          logger.debug(`Redirecting to direct URL: ${directUrl}`);
+          return res.redirect(directUrl);
+        }
+        
+        // If file has base64 data, serve it
+        if (fileInfo?.data || fileInfo?.base64) {
+          const base64Data = fileInfo.data || fileInfo.base64;
+          const mimeType = fileInfo.mimeType || fileInfo.mimetype || 'image/jpeg';
+          const buffer = Buffer.from(base64Data, 'base64');
+          
+          res.setHeader('Content-Type', mimeType);
+          res.setHeader('Content-Length', buffer.length);
+          res.setHeader('Cache-Control', 'public, max-age=31536000');
+          return res.send(buffer);
+        }
+      } catch (infoErr) {
+        logger.debug(`File info request failed: ${infoErr.message}`);
+      }
+      
+      // All attempts failed
+      logger.error('Get file preview - all endpoints failed:', {
+        fileId,
+        lastError: lastError?.message
       });
       
-      // Set appropriate headers
-      const contentType = response.headers['content-type'] || 'image/jpeg';
-      res.setHeader('Content-Type', contentType);
-      res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
-      res.setHeader('Access-Control-Allow-Origin', '*'); // Allow cross-origin for images
-      
-      // Pipe the image stream to response
-      response.data.pipe(res);
+      res.status(404).send('Image not found');
     } catch (error) {
       logger.error('Get file preview error:', {
         fileId: req.params?.fileId,
         message: error.message,
-        status: error.response?.status,
-        data: error.response?.data
+        status: error.response?.status
       });
-      
-      // Return a placeholder or error based on status
-      if (error.response?.status === 404) {
-        res.status(404).send('Image not found');
-      } else {
-        res.status(error.response?.status || 500).send('Failed to load image');
-      }
+      res.status(error.response?.status || 500).send('Failed to load image');
     }
   }
 
