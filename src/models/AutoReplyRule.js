@@ -67,13 +67,16 @@ class AutoReplyRule {
    */
   static async findByWorkspace(workspaceId, options = {}) {
     const { limit = 100, offset = 0 } = options;
+    // Use query() with interpolated LIMIT/OFFSET - prepared statements have issues with these
+    const safeLimit = parseInt(limit, 10) || 100;
+    const safeOffset = parseInt(offset, 10) || 0;
     
-    const [rows] = await db.execute(
+    const [rows] = await db.query(
       `SELECT * FROM auto_reply_rules 
        WHERE workspace_id = ? 
        ORDER BY priority DESC, created_at DESC
-       LIMIT ? OFFSET ?`,
-      [workspaceId, limit, offset]
+       LIMIT ${safeLimit} OFFSET ${safeOffset}`,
+      [workspaceId]
     );
     
     return rows.map(row => {

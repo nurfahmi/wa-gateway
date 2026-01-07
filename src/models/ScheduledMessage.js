@@ -38,7 +38,9 @@ class ScheduledMessage {
    * Find pending messages to send
    */
   static async findPendingToSend(limit = 100) {
-    const [rows] = await db.execute(
+    // Use query() instead of execute() for LIMIT - prepared statements have issues with LIMIT in some MySQL versions
+    const safeLimit = parseInt(limit, 10) || 100;
+    const [rows] = await db.query(
       `SELECT sm.*, wa.account_identifier, wa.provider 
        FROM scheduled_messages sm
        JOIN whatsapp_accounts wa ON sm.account_id = wa.id
@@ -46,8 +48,7 @@ class ScheduledMessage {
        AND sm.scheduled_at <= NOW()
        AND wa.status = 'connected'
        ORDER BY sm.scheduled_at ASC
-       LIMIT ?`,
-      [limit]
+       LIMIT ${safeLimit}`
     );
     return rows;
   }
@@ -57,6 +58,8 @@ class ScheduledMessage {
    */
   static async findByWorkspace(workspaceId, options = {}) {
     const { status, limit = 100, offset = 0 } = options;
+    const safeLimit = parseInt(limit, 10) || 100;
+    const safeOffset = parseInt(offset, 10) || 0;
     
     let query = 'SELECT * FROM scheduled_messages WHERE workspace_id = ?';
     const params = [workspaceId];
@@ -66,10 +69,10 @@ class ScheduledMessage {
       params.push(status);
     }
 
-    query += ' ORDER BY scheduled_at DESC LIMIT ? OFFSET ?';
-    params.push(limit, offset);
+    // Use query() with interpolated LIMIT/OFFSET - prepared statements have issues with these
+    query += ` ORDER BY scheduled_at DESC LIMIT ${safeLimit} OFFSET ${safeOffset}`;
 
-    const [rows] = await db.execute(query, params);
+    const [rows] = await db.query(query, params);
     return rows;
   }
 

@@ -103,10 +103,14 @@ class Contact {
       params.push(is_blocked);
     }
 
-    query += ` ORDER BY ${orderBy} ${orderDir} LIMIT ? OFFSET ?`;
-    params.push(limit, offset);
+    // Use query() with interpolated LIMIT/OFFSET - prepared statements have issues with these
+    const safeLimit = parseInt(limit, 10) || 100;
+    const safeOffset = parseInt(offset, 10) || 0;
+    const safeOrderBy = ['last_message_at', 'name', 'phone_number', 'created_at', 'message_count'].includes(orderBy) ? orderBy : 'last_message_at';
+    const safeOrderDir = orderDir.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+    query += ` ORDER BY ${safeOrderBy} ${safeOrderDir} LIMIT ${safeLimit} OFFSET ${safeOffset}`;
 
-    const [rows] = await db.execute(query, params);
+    const [rows] = await db.query(query, params);
     return rows.map(row => {
       if (row.tags) row.tags = JSON.parse(row.tags);
       if (row.custom_fields) row.custom_fields = JSON.parse(row.custom_fields);

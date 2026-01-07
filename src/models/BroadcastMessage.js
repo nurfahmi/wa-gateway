@@ -50,6 +50,8 @@ class BroadcastMessage {
    */
   static async findByWorkspace(workspaceId, options = {}) {
     const { status, limit = 100, offset = 0 } = options;
+    const safeLimit = parseInt(limit, 10) || 100;
+    const safeOffset = parseInt(offset, 10) || 0;
     
     let query = 'SELECT * FROM broadcast_messages WHERE workspace_id = ?';
     const params = [workspaceId];
@@ -59,10 +61,10 @@ class BroadcastMessage {
       params.push(status);
     }
 
-    query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-    params.push(limit, offset);
+    // Use query() with interpolated LIMIT/OFFSET - prepared statements have issues with these
+    query += ` ORDER BY created_at DESC LIMIT ${safeLimit} OFFSET ${safeOffset}`;
 
-    const [rows] = await db.execute(query, params);
+    const [rows] = await db.query(query, params);
     return rows.map(row => {
       if (row.target_phone_numbers) {
         row.target_phone_numbers = JSON.parse(row.target_phone_numbers);
@@ -75,7 +77,9 @@ class BroadcastMessage {
    * Find broadcasts ready to send
    */
   static async findReadyToSend(limit = 10) {
-    const [rows] = await db.execute(
+    // Use query() instead of execute() for LIMIT - prepared statements have issues with LIMIT in some MySQL versions
+    const safeLimit = parseInt(limit, 10) || 10;
+    const [rows] = await db.query(
       `SELECT bm.*, wa.account_identifier, wa.provider 
        FROM broadcast_messages bm
        JOIN whatsapp_accounts wa ON bm.account_id = wa.id
@@ -83,8 +87,7 @@ class BroadcastMessage {
        AND bm.scheduled_at <= NOW()
        AND wa.status = 'connected'
        ORDER BY bm.scheduled_at ASC
-       LIMIT ?`,
-      [limit]
+       LIMIT ${safeLimit}`
     );
     return rows.map(row => {
       if (row.target_phone_numbers) {

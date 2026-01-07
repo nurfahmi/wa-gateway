@@ -55,10 +55,12 @@ class MessageTemplate {
       query += ' AND is_favorite = TRUE';
     }
 
-    query += ' ORDER BY is_favorite DESC, usage_count DESC, created_at DESC LIMIT ? OFFSET ?';
-    params.push(limit, offset);
+    // Use query() with interpolated LIMIT/OFFSET - prepared statements have issues with these
+    const safeLimit = parseInt(limit, 10) || 100;
+    const safeOffset = parseInt(offset, 10) || 0;
+    query += ` ORDER BY is_favorite DESC, usage_count DESC, created_at DESC LIMIT ${safeLimit} OFFSET ${safeOffset}`;
 
-    const [rows] = await db.execute(query, params);
+    const [rows] = await db.query(query, params);
     return rows.map(row => {
       if (row.variables) {
         row.variables = JSON.parse(row.variables);

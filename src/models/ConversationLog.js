@@ -25,12 +25,14 @@ class ConversationLog {
    * Get conversation history for a contact
    */
   static async getHistory(workspaceId, accountId, contactPhone, limit = 10) {
-    const [rows] = await db.execute(
+    // Use query() with interpolated LIMIT - prepared statements have issues with LIMIT
+    const safeLimit = parseInt(limit, 10) || 10;
+    const [rows] = await db.query(
       `SELECT * FROM conversation_logs 
        WHERE workspace_id = ? AND account_id = ? AND contact_phone = ?
        ORDER BY timestamp DESC
-       LIMIT ?`,
-      [workspaceId, accountId, contactPhone, limit]
+       LIMIT ${safeLimit}`,
+      [workspaceId, accountId, contactPhone]
     );
     return rows.reverse(); // Return in chronological order
   }

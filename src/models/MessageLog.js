@@ -85,9 +85,10 @@ class MessageLog {
     const [countResult] = await db.query(countQuery, params);
     const total = countResult[0].total;
 
-    // Get paginated results
-    query += ' ORDER BY sent_at DESC LIMIT ? OFFSET ?';
-    params.push(limit, offset);
+    // Get paginated results - use interpolated LIMIT/OFFSET for compatibility
+    const safeLimit = parseInt(limit, 10) || 50;
+    const safeOffset = parseInt(offset, 10) || 0;
+    query += ` ORDER BY sent_at DESC LIMIT ${safeLimit} OFFSET ${safeOffset}`;
 
     const [rows] = await db.query(query, params);
 
