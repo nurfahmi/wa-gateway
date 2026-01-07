@@ -249,7 +249,16 @@ class DashboardController {
       }
 
       const workspaceUser = await WorkspaceUser.findByOAuthId(req.session.user.id);
+      if (!workspaceUser) {
+        logger.error('WorkspaceUser not found for OAuth ID:', req.session.user.id);
+        return res.redirect('/auth/login?error=workspace_not_found');
+      }
+      
       const workspace = await Workspace.findById(workspaceUser.workspace_id);
+      if (!workspace) {
+        logger.error('Workspace not found for ID:', workspaceUser.workspace_id);
+        return res.redirect('/auth/login?error=workspace_not_found');
+      }
       
       // Require accountId - redirect to accounts if not provided
       const accountId = req.params.accountId ? parseInt(req.params.accountId) : null;

@@ -149,17 +149,26 @@ class AutoReplyService {
    * Get all rules for workspace
    */
   async getRules(workspaceId, options = {}) {
-    const { accountId, ...otherOptions } = options;
-    
-    if (accountId) {
-      // Get rules for specific account (or workspace-wide rules where account_id is null)
-      const allRules = await AutoReplyRule.findByWorkspace(workspaceId, otherOptions);
-      return allRules.filter(rule => 
-        rule.account_id === null || rule.account_id === accountId
-      );
+    try {
+      const { accountId, ...otherOptions } = options;
+      
+      if (accountId) {
+        // Get rules for specific account (or workspace-wide rules where account_id is null)
+        const allRules = await AutoReplyRule.findByWorkspace(workspaceId, otherOptions);
+        return allRules.filter(rule => 
+          rule.account_id === null || rule.account_id === accountId
+        );
+      }
+      
+      return await AutoReplyRule.findByWorkspace(workspaceId, otherOptions);
+    } catch (error) {
+      // Handle case where auto_reply_rules table doesn't exist
+      if (error.code === 'ER_NO_SUCH_TABLE') {
+        logger.warn('auto_reply_rules table does not exist. Run database/complete-setup.sql to create all tables.');
+        return [];
+      }
+      throw error;
     }
-    
-    return await AutoReplyRule.findByWorkspace(workspaceId, otherOptions);
   }
 
   /**
