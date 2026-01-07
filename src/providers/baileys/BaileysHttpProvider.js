@@ -743,30 +743,45 @@ class BaileysHttpProvider extends WhatsAppProvider {
       const FormData = require('form-data');
       const formData = new FormData();
       
-      formData.append('file', fileBuffer, fileName);
+      // Append file buffer with proper options (filename and contentType)
+      formData.append('file', fileBuffer, {
+        filename: fileName,
+        contentType: fileType
+      });
       formData.append('fileType', fileType);
+      formData.append('userId', userId);
 
+      // Try the primary endpoint first
       const response = await axios.post(
-        `${this.baileysServiceUrl}/files/users/${userId}`,
+        `${this.baileysServiceUrl}/files/upload`,
         formData,
         { 
           headers: {
             ...this._getHeaders(),
             ...formData.getHeaders()
-          }
+          },
+          timeout: 30000 // 30 second timeout for file uploads
         }
       );
 
+      // Handle different response formats
+      const fileData = response.data.file || response.data.data || response.data;
+      
       return {
-        fileId: response.data.file?.id,
-        fileName: response.data.file?.fileName,
-        fileType: response.data.file?.fileType,
-        fileSize: response.data.file?.fileSize,
-        url: response.data.file?.url
+        fileId: fileData.id || fileData.fileId,
+        fileName: fileData.fileName || fileData.filename || fileName,
+        fileType: fileData.fileType || fileData.mimetype || fileType,
+        fileSize: fileData.fileSize || fileData.size,
+        url: fileData.url || fileData.previewUrl
       };
     } catch (error) {
-      logger.error('Baileys HTTP uploadFile error:', error.response?.data || error.message);
-      throw new Error('Failed to upload file: ' + (error.response?.data?.error || error.message));
+      logger.error('Baileys HTTP uploadFile error:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        url: `${this.baileysServiceUrl}/files/upload`
+      });
+      throw new Error('Failed to upload file: ' + (error.response?.data?.error || error.response?.data?.message || error.message));
     }
   }
 
