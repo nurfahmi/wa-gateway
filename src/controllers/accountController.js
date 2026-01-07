@@ -497,16 +497,16 @@ class AccountController {
 
   /**
    * Proxy file preview from Baileys service (to avoid CORS issues)
-   * Accessible via session-based auth (for images in <img> tags)
+   * Allow public access for file previews (files have unique IDs that act as tokens)
    */
   async getFilePreview(req, res) {
     try {
-      // Check for session (web route) or API key (API route)
-      if (!req.session?.user && !req.apiKey && !req.deviceApiKey) {
-        return res.status(401).send('Unauthorized');
+      const { fileId } = req.params;
+      
+      if (!fileId) {
+        return res.status(400).send('File ID required');
       }
       
-      const { fileId } = req.params;
       const config = require('../config');
       const axios = require('axios');
       
@@ -516,22 +516,38 @@ class AccountController {
       
       const previewUrl = `${baileysServiceUrl}/files/${fileId}/preview`;
       
+      logger.debug(`Fetching file preview from: ${previewUrl}`);
+      
       const response = await axios.get(previewUrl, {
         headers: {
           'X-API-Token': baileysApiKey
         },
-        responseType: 'stream'
+        responseType: 'stream',
+        timeout: 30000 // 30 second timeout
       });
       
       // Set appropriate headers
-      res.setHeader('Content-Type', response.headers['content-type'] || 'image/jpeg');
+      const contentType = response.headers['content-type'] || 'image/jpeg';
+      res.setHeader('Content-Type', contentType);
       res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+      res.setHeader('Access-Control-Allow-Origin', '*'); // Allow cross-origin for images
       
       // Pipe the image stream to response
       response.data.pipe(res);
     } catch (error) {
-      logger.error('Get file preview error:', error);
-      res.status(error.response?.status || 404).send('Image not found');
+      logger.error('Get file preview error:', {
+        fileId: req.params?.fileId,
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data
+      });
+      
+      // Return a placeholder or error based on status
+      if (error.response?.status === 404) {
+        res.status(404).send('Image not found');
+      } else {
+        res.status(error.response?.status || 500).send('Failed to load image');
+      }
     }
   }
 

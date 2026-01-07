@@ -766,13 +766,16 @@ class BaileysHttpProvider extends WhatsAppProvider {
 
       // Handle different response formats
       const fileData = response.data.file || response.data.data || response.data;
+      const fileId = fileData.id || fileData.fileId;
       
       return {
-        fileId: fileData.id || fileData.fileId,
+        fileId: fileId,
         fileName: fileData.fileName || fileData.filename || fileName,
         fileType: fileData.fileType || fileData.mimetype || fileType,
         fileSize: fileData.fileSize || fileData.size,
-        url: fileData.url || fileData.previewUrl
+        // Always use local proxy URL to avoid CORS issues
+        // The frontend will use /files/{fileId}/preview which proxies through our server
+        url: fileId ? `/files/${fileId}/preview` : null
       };
     } catch (error) {
       logger.error('Baileys HTTP uploadFile error:', {

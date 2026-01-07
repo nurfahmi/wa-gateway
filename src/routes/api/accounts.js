@@ -119,7 +119,7 @@ router.put('/files/:fileId', asyncHandler(accountController.getFileInfo.bind(acc
 router.delete('/files/:fileId', asyncHandler(accountController.deleteFile.bind(accountController)));
 router.delete('/files/bulk', asyncHandler(accountController.deleteFile.bind(accountController)));
 router.get('/files/users/:userId/stats', asyncHandler(accountController.getFileInfo.bind(accountController)));
-router.get('/files/:fileId/preview', asyncHandler(accountController.getFileInfo.bind(accountController)));
+router.get('/files/:fileId/preview', asyncHandler(accountController.getFilePreview.bind(accountController)));
 // Deprecated routes for backward compatibility
 router.get('/files/users/:userId/:fileType', asyncHandler(accountController.getFileInfo.bind(accountController)));
 
